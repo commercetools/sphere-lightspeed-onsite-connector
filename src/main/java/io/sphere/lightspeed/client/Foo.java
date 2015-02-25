@@ -1,4 +1,4 @@
-package io.sphere.sdk.lightspeed.client;
+package io.sphere.lightspeed.client;
 
 public class Foo {
 

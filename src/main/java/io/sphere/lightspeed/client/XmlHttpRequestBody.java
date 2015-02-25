@@ -1,4 +1,4 @@
-package io.sphere.sdk.lightspeed.client;
+package io.sphere.lightspeed.client;
 
 import io.sphere.sdk.http.HttpRequestBody;
 import io.sphere.sdk.models.Base;

@@ -1,4 +1,4 @@
-package io.sphere.sdk.lightspeed.client;
+package io.sphere.lightspeed.client;
 
 import com.ning.http.client.*;
 import io.sphere.sdk.http.HttpClient;
@@ -9,7 +9,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLEngine;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 import java.io.IOException;
@@ -66,21 +65,8 @@ public final class LightSpeedHttpClient implements HttpClient, AutoCloseable {
             final AsyncHttpClientConfig config = new AsyncHttpClientConfig.Builder().setSSLContext(tolerantSSLContext()).build();
             return of(new AsyncHttpClient(config));
         } catch (GeneralSecurityException e) {
-            throw new SslContextException("Was not able to create a SSL context that accepts all certificates", e);
+            throw new SslContextException("Not able to create a SSL context that accepts all certificates", e);
         }
-    }
-
-    private static SSLContext tolerantSSLContext() throws KeyManagementException, NoSuchAlgorithmException{
-        final SSLContext context = SSLContext.getInstance("SSL");
-        context.init(null, new TrustManager[]{new X509TrustManager() {
-            @Override
-            public void checkClientTrusted(final X509Certificate[] x509Certificates, final String s) throws CertificateException { }
-            @Override
-            public void checkServerTrusted(final X509Certificate[] x509Certificates, final String s) throws CertificateException { }
-            @Override
-            public X509Certificate[] getAcceptedIssuers() { return new X509Certificate[0]; }
-        }}, null);
-        return context;
     }
 
     public static LightSpeedHttpClient of(final AsyncHttpClient asyncHttpClient) {
@@ -139,5 +125,18 @@ public final class LightSpeedHttpClient implements HttpClient, AutoCloseable {
         } catch (IOException e) {
             throw new HttpException(e);
         }
+    }
+
+    private static SSLContext tolerantSSLContext() throws KeyManagementException, NoSuchAlgorithmException{
+        final SSLContext context = SSLContext.getInstance("SSL");
+        context.init(null, new TrustManager[]{new X509TrustManager() {
+            @Override
+            public void checkClientTrusted(final X509Certificate[] x509Certificates, final String s) throws CertificateException { }
+            @Override
+            public void checkServerTrusted(final X509Certificate[] x509Certificates, final String s) throws CertificateException { }
+            @Override
+            public X509Certificate[] getAcceptedIssuers() { return new X509Certificate[0]; }
+        }}, null);
+        return context;
     }
 }
