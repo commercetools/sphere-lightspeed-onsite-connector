@@ -23,11 +23,13 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
 
-public final class LightSpeedHttpClient implements HttpClient, AutoCloseable {
-    private final AsyncHttpClient asyncHttpClient;
-    private static final Logger LOGGER = LoggerFactory.getLogger(LightSpeedHttpClient.class);
+import static com.ning.http.client.Realm.AuthScheme.*;
 
-    LightSpeedHttpClient(final AsyncHttpClient asyncHttpClient) {
+public final class NingAsyncHttpClientAdapter implements HttpClient, AutoCloseable {
+    private final AsyncHttpClient asyncHttpClient;
+    private static final Logger LOGGER = LoggerFactory.getLogger(NingAsyncHttpClientAdapter.class);
+
+    NingAsyncHttpClientAdapter(final AsyncHttpClient asyncHttpClient) {
         this.asyncHttpClient = asyncHttpClient;
         LOGGER.trace("Creating " + getLogName());
     }
@@ -60,17 +62,20 @@ public final class LightSpeedHttpClient implements HttpClient, AutoCloseable {
         }
     }
 
-    public static LightSpeedHttpClient of() {
+    public static NingAsyncHttpClientAdapter of(final String username, final String password) {
         try {
-            final AsyncHttpClientConfig config = new AsyncHttpClientConfig.Builder().setSSLContext(tolerantSSLContext()).build();
+            final Realm basicAuth = new Realm.RealmBuilder().setScheme(BASIC).setPrincipal(username).setPassword(password).build();
+            final AsyncHttpClientConfig config = new AsyncHttpClientConfig.Builder()
+                    .setSSLContext(tolerantSSLContext())
+                    .setRealm(basicAuth).build();
             return of(new AsyncHttpClient(config));
         } catch (GeneralSecurityException e) {
             throw new SslContextException("Not able to create a SSL context that accepts all certificates", e);
         }
     }
 
-    public static LightSpeedHttpClient of(final AsyncHttpClient asyncHttpClient) {
-        return new LightSpeedHttpClient(asyncHttpClient);
+    public static NingAsyncHttpClientAdapter of(final AsyncHttpClient asyncHttpClient) {
+        return new NingAsyncHttpClientAdapter(asyncHttpClient);
     }
 
     private <T> Request asNingRequest(final HttpRequest request) {

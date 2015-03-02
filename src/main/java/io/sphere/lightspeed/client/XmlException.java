@@ -14,6 +14,10 @@ public class XmlException extends RuntimeException {
         super(message);
     }
 
+    public XmlException(final byte[] input, final Throwable cause) {
+        super("Cannot parse: " + new String(input), cause);
+    }
+
     public XmlException(final String message, final Throwable cause) {
         super(message, cause);
     }

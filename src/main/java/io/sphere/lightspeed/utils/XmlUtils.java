@@ -1,6 +1,9 @@
 package io.sphere.lightspeed.utils;
 
+import com.ctc.wstx.stax.WstxInputFactory;
+import com.ctc.wstx.stax.WstxOutputFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
@@ -23,15 +26,14 @@ public final class XmlUtils {
     }
 
     public static ObjectMapper newXmlMapper() {
-        return new XmlMapper()
+        return new XmlMapper(new WstxInputFactory(), new WstxOutputFactory())
                 .registerModule(new JavaOptionalModule())
                 .registerModule(new ParameterNamesModule())
                 .registerModule(new JSR310Module())//Java 8 DateTime
                 .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
 
-
-    public static <T> String readStringFromObject(final T object) {
+    public static <T> String toXml(final T object) {
         try {
             return MAPPER.writeValueAsString(object);
         } catch (JsonProcessingException e) {
@@ -52,6 +54,14 @@ public final class XmlUtils {
             return IOUtils.toString(readFromResource(resourcePath));
         } catch (IOException e) {
             throw new XmlException(e);
+        }
+    }
+
+    public static <T> T readObject(final TypeReference<T> typeReference, final byte[] input) {
+        try {
+            return MAPPER.readValue(input, typeReference);
+        } catch (IOException e) {
+            throw new XmlException(input, e);
         }
     }
 

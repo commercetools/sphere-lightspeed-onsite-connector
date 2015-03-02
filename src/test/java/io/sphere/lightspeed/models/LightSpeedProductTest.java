@@ -1,6 +1,5 @@
 package io.sphere.lightspeed.models;
 
-import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import io.sphere.sdk.models.LocalizedStrings;
 import io.sphere.sdk.products.*;
 import io.sphere.sdk.producttypes.ProductType;
@@ -16,7 +15,7 @@ import java.util.Optional;
 
 import static io.sphere.lightspeed.utils.PriceUtils.selectPriceAmount;
 import static io.sphere.lightspeed.utils.XmlUtils.readObjectFromResource;
-import static io.sphere.lightspeed.utils.XmlUtils.readStringFromObject;
+import static io.sphere.lightspeed.utils.XmlUtils.toXml;
 import static io.sphere.lightspeed.utils.XmlUtils.readStringFromResource;
 import static io.sphere.sdk.products.ProductProjectionType.*;
 import static java.util.Collections.emptyList;
@@ -48,7 +47,7 @@ public class LightSpeedProductTest {
     @Test
     public void xmlCorrespondsToProduct() throws Exception {
         final LightSpeedProduct product = LightSpeedProduct.of(someProductWithPrice()).get();
-        final String xml = readStringFromObject(product);
+        final String xml = toXml(product);
         final String expected = readStringFromResource("product.xml");
         XMLAssert.assertXMLEqual(xml, expected);
     }

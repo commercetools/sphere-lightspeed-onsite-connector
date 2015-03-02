@@ -12,46 +12,46 @@ import static io.sphere.lightspeed.utils.PriceUtils.priceAmount;
 import static io.sphere.lightspeed.utils.PriceUtils.selectPrice;
 
 @JacksonXmlRootElement(localName = "product")
-public class LightSpeedProduct extends Base {
+public class LightSpeedProductDraft extends Base {
     private String code;
 
-    @JacksonXmlProperty(localName = "sell_price")
-    private double sellPrice;
+    //@JacksonXmlProperty(localName = "sell_price")
+    //private double sellPrice;
 
-    private LightSpeedProduct() {
+    private LightSpeedProductDraft() {
     }
 
-    LightSpeedProduct(final String code, final double sellPrice) {
+    LightSpeedProductDraft(final String code, final double sellPrice) {
         this.code = code;
-        this.sellPrice = sellPrice;
+        //this.sellPrice = sellPrice;
     }
 
     public String getCode() {
         return code;
     }
 
-    public double getSellPrice() {
-        return sellPrice;
-    }
+//    public double getSellPrice() {
+//        return sellPrice;
+//    }
 
-    public static TypeReference<LightSpeedProduct> typeReference(){
-        return new TypeReference<LightSpeedProduct>() {
+    public static TypeReference<LightSpeedProductDraft> typeReference(){
+        return new TypeReference<LightSpeedProductDraft>() {
             @Override
             public String toString() {
-                return "TypeReference<LightSpeedProduct>";
+                return "TypeReference<LightSpeedProductDraft>";
             }
         };
     }
 
-    public static Optional<LightSpeedProduct> of(ProductProjection product) {
-        return selectPrice(product).map(p -> new LightSpeedProduct(product.getId(), priceAmount(p)));
+    public static Optional<LightSpeedProductDraft> of(ProductProjection product) {
+        return selectPrice(product).map(p -> new LightSpeedProductDraft(product.getId(), priceAmount(p)));
     }
 
     @Override
     public String toString() {
         return "LSProduct{" +
                 "code='" + code + '\'' +
-                ", sellPrice=" + sellPrice +
+//                ", sellPrice=" + sellPrice +
                 '}';
     }
 
@@ -61,9 +61,9 @@ public class LightSpeedProduct extends Base {
         if (o == null || getClass() != o.getClass()) return false;
         if (!super.equals(o)) return false;
 
-        final LightSpeedProduct lsProduct = (LightSpeedProduct) o;
+        final LightSpeedProductDraft lsProduct = (LightSpeedProductDraft) o;
 
-        if (Double.compare(lsProduct.sellPrice, sellPrice) != 0) return false;
+//        if (Double.compare(lsProduct.sellPrice, sellPrice) != 0) return false;
         if (code != null ? !code.equals(lsProduct.code) : lsProduct.code != null) return false;
 
         return true;
@@ -74,8 +74,8 @@ public class LightSpeedProduct extends Base {
         int result = super.hashCode();
         long temp;
         result = 31 * result + (code != null ? code.hashCode() : 0);
-        temp = Double.doubleToLongBits(sellPrice);
-        result = 31 * result + (int) (temp ^ (temp >>> 32));
+//        temp = Double.doubleToLongBits(sellPrice);
+//        result = 31 * result + (int) (temp ^ (temp >>> 32));
         return result;
     }
 }
