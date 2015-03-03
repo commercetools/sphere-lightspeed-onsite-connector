@@ -1,56 +1,56 @@
 package io.sphere.lightspeed.client;
 
 import com.ning.http.client.*;
-import io.sphere.sdk.http.HttpClient;
+import com.ning.http.client.cookie.Cookie;
 import io.sphere.sdk.http.HttpException;
 import io.sphere.sdk.http.HttpRequest;
 import io.sphere.sdk.http.HttpResponse;
+import io.sphere.sdk.http.StringHttpRequestBody;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.security.GeneralSecurityException;
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
+import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.*;
 
 import static com.ning.http.client.Realm.AuthScheme.*;
 
-public final class NingAsyncHttpClientAdapter implements HttpClient, AutoCloseable {
-    private final AsyncHttpClient asyncHttpClient;
+public final class NingAsyncHttpClientAdapter implements LightSpeedHttpClient, AutoCloseable {
     private static final Logger LOGGER = LoggerFactory.getLogger(NingAsyncHttpClientAdapter.class);
+    private final AsyncHttpClient asyncHttpClient;
+    // TODO Avoid mutable
+    private CompletableFuture<List<Cookie>> cookiesFuture;
 
-    NingAsyncHttpClientAdapter(final AsyncHttpClient asyncHttpClient) {
+    NingAsyncHttpClientAdapter(final AsyncHttpClient asyncHttpClient, final CompletableFuture<List<Cookie>> cookies) {
         this.asyncHttpClient = asyncHttpClient;
+        this.cookiesFuture = cookies;
         LOGGER.trace("Creating " + getLogName());
     }
 
     @Override
     public CompletableFuture<HttpResponse> execute(final HttpRequest httpRequest) {
         LOGGER.debug("Executing " + httpRequest);
-        final Request request = asNingRequest(httpRequest);
-        try {
+        return cookiesFuture.thenCompose(cookies -> {
+            final Request request = asNingRequest(httpRequest, cookies);
             final CompletableFuture<Response> future = wrap(asyncHttpClient.executeRequest(request));
+            if (cookies.isEmpty()) {
+                cookiesFuture = future.thenApply(Response::getCookies);
+            }
             return future.thenApply((Response response) -> {
-                // TODO Deal with XML instead
                 final byte[] responseBodyAsBytes = getResponseBodyAsBytes(response);
-                Optional<byte[]> body = responseBodyAsBytes.length > 0 ? Optional.of(responseBodyAsBytes) : Optional.empty();
+                final Optional<byte[]> body = responseBodyAsBytes.length > 0 ? Optional.of(responseBodyAsBytes) : Optional.empty();
                 final HttpResponse httpResponse = HttpResponse.of(response.getStatusCode(), body, Optional.of(httpRequest));
                 LOGGER.debug("Response " + httpResponse);
                 return httpResponse;
             });
-        } catch (final IOException e) {
-            return failed(new HttpException(e));
-        }
+        });
+    }
+
+    @Override
+    public CompletableFuture<List<Cookie>> cookies() {
+        return cookiesFuture;
     }
 
     @Override
@@ -62,32 +62,36 @@ public final class NingAsyncHttpClientAdapter implements HttpClient, AutoCloseab
         }
     }
 
-    public static NingAsyncHttpClientAdapter of(final String username, final String password) {
-        try {
-            final Realm basicAuth = new Realm.RealmBuilder().setScheme(BASIC).setPrincipal(username).setPassword(password).build();
-            final AsyncHttpClientConfig config = new AsyncHttpClientConfig.Builder()
-                    .setSSLContext(tolerantSSLContext())
-                    .setRealm(basicAuth).build();
-            return of(new AsyncHttpClient(config));
-        } catch (GeneralSecurityException e) {
-            throw new SslContextException("Not able to create a SSL context that accepts all certificates", e);
-        }
+    public static NingAsyncHttpClientAdapter of(final String username, final String password, final List<Cookie> cookies) {
+        final Realm basicAuth = new Realm.RealmBuilder()
+                .setScheme(BASIC)
+                .setPrincipal(username)
+                .setPassword(password).build();
+        final AsyncHttpClientConfig config = new AsyncHttpClientConfig.Builder()
+                .setCompressionEnforced(true)
+                .setAcceptAnyCertificate(true)
+                .setHostnameVerifier(null)
+                .setRealm(basicAuth)
+                .setMaxConnections(1)
+                .setMaxConnectionsPerHost(1).build();
+        return of(new AsyncHttpClient(config), cookies);
     }
 
-    public static NingAsyncHttpClientAdapter of(final AsyncHttpClient asyncHttpClient) {
-        return new NingAsyncHttpClientAdapter(asyncHttpClient);
+    public static NingAsyncHttpClientAdapter of(final AsyncHttpClient asyncHttpClient, final List<Cookie> cookies) {
+        return new NingAsyncHttpClientAdapter(asyncHttpClient, CompletableFuture.completedFuture(cookies));
     }
 
-    private <T> Request asNingRequest(final HttpRequest request) {
+    private Request asNingRequest(final HttpRequest request, final List<Cookie> cookies) {
         final RequestBuilder builder = new RequestBuilder()
                 .setUrl(request.getUrl())
-                .setMethod(request.getHttpMethod().toString());
+                .setMethod(request.getHttpMethod().toString())
+                .setCookies(cookies);
 
         request.getHeaders().getHeadersAsMap().forEach(builder::setHeader);
 
         request.getBody().ifPresent(body -> {
-            if (body instanceof XmlHttpRequestBody) {
-                final String bodyAsString = ((XmlHttpRequestBody) body).getUnderlying();
+            if (body instanceof StringHttpRequestBody) {
+                final String bodyAsString = ((StringHttpRequestBody) body).getString();
                 builder.setBodyEncoding(StandardCharsets.UTF_8.name()).setBody(bodyAsString);
             }
         });
@@ -118,30 +122,11 @@ public final class NingAsyncHttpClientAdapter implements HttpClient, AutoCloseab
         return result;
     }
 
-    private static <T> CompletableFuture<T> failed(final Throwable e) {
-        final CompletableFuture<T> future = new CompletableFuture<>();
-        future.completeExceptionally(e);
-        return future;
-    }
-
     private byte[] getResponseBodyAsBytes(final Response response) {
         try {
             return response.getResponseBodyAsBytes();
         } catch (IOException e) {
             throw new HttpException(e);
         }
-    }
-
-    private static SSLContext tolerantSSLContext() throws KeyManagementException, NoSuchAlgorithmException{
-        final SSLContext context = SSLContext.getInstance("SSL");
-        context.init(null, new TrustManager[]{new X509TrustManager() {
-            @Override
-            public void checkClientTrusted(final X509Certificate[] x509Certificates, final String s) throws CertificateException { }
-            @Override
-            public void checkServerTrusted(final X509Certificate[] x509Certificates, final String s) throws CertificateException { }
-            @Override
-            public X509Certificate[] getAcceptedIssuers() { return new X509Certificate[0]; }
-        }}, null);
-        return context;
     }
 }

@@ -1,7 +1,8 @@
 package io.sphere.lightspeed.client;
 
-import io.sphere.sdk.http.HttpClient;
 import io.sphere.sdk.models.Base;
+
+import static java.util.Collections.emptyList;
 
 public class LightSpeedClientFactory extends Base {
 
@@ -9,12 +10,11 @@ public class LightSpeedClientFactory extends Base {
     }
 
     public LightSpeedClient createClient(final LightSpeedConfig config) {
-        final SessionSupplier sessionSupplier = SessionSupplier.of();
-        return createClient(config, sessionSupplier, NingAsyncHttpClientAdapter.of(config.getUsername(), config.getPassword()));
+        return createClient(config, NingAsyncHttpClientAdapter.of(config.getUsername(), config.getPassword(), emptyList()));
     }
 
-    public LightSpeedClient createClient(final LightSpeedConfig config, final SessionSupplier sessionSupplier, final HttpClient httpClient) {
-        return LightSpeedClient.of(config, sessionSupplier, httpClient);
+    public LightSpeedClient createClient(final LightSpeedConfig config, final LightSpeedHttpClient httpClient) {
+        return LightSpeedClient.of(config, httpClient);
     }
 
     public static LightSpeedClientFactory of() {

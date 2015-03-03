@@ -1,6 +1,7 @@
 package io.sphere.lightspeed.client;
 
 import io.sphere.lightspeed.commands.ProductCreateCommand;
+import io.sphere.lightspeed.models.LightSpeedProduct;
 import io.sphere.lightspeed.models.LightSpeedProductDraft;
 import io.sphere.lightspeed.queries.InvoiceQuery;
 import io.sphere.sdk.http.*;
@@ -23,30 +24,28 @@ import static org.fest.assertions.Assertions.assertThat;
 
 public class ClientIntegrationTest extends LightSpeedIntegrationTest {
 
-    @Ignore
     @Test
     public void testHttpClient() throws Exception {
         final HttpHeaders headers = HttpHeaders.of()
                 .plus("User-Agent", appId() + "/1.0")
                 .plus("X-PAPPID", appPrivateId());
         final HttpRequest request = HttpRequest.of(GET, appUrl() + "/products/", headers, Optional.empty());
-        final NingAsyncHttpClientAdapter client = NingAsyncHttpClientAdapter.of(username(), password());
-        final HttpResponse response = client.execute(request).get();
-        assertThat(response).isNotNull();
-        response.getResponseBody().ifPresent(r -> System.out.println(new String(r)));
+        final HttpResponse response = ningClient().execute(request).get();
+        assertThat(response.getStatusCode()).isEqualTo(200);
     }
 
     @Ignore
     @Test
     public void testProductCreation() throws Exception {
-        final ProductCreateCommand command = ProductCreateCommand.of(LightSpeedProductDraft.of(product()).get());
-        execute(command);
+        final LightSpeedProductDraft draft = LightSpeedProductDraft.of(product()).get();
+        final LightSpeedProduct product = execute(ProductCreateCommand.of(draft));
+        assertThat(product.getCode()).isEqualTo(draft.getCode());
     }
 
     @Test
     public void testInvoiceQuery() throws Exception {
         final InvoiceQuery query = InvoiceQuery.of();
-        execute(query).forEach(i -> System.out.printf("URI: " + i.getUri()));
+        assertThat(execute(query).size()).isGreaterThanOrEqualTo(0);
     }
 
     private ProductProjection product() {

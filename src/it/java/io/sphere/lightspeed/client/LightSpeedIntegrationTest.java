@@ -5,6 +5,8 @@ import org.junit.BeforeClass;
 
 import java.util.Optional;
 
+import static java.util.Collections.emptyList;
+
 public abstract class LightSpeedIntegrationTest {
 
     private static final String LIGHTSPEED_IT_APP_URL = "LIGHTSPEED_IT_APP_URL";
@@ -13,11 +15,15 @@ public abstract class LightSpeedIntegrationTest {
     private static final String LIGHTSPEED_IT_USERNAME = "LIGHTSPEED_IT_USERNAME";
     private static final String LIGHTSPEED_IT_PASSWORD = "LIGHTSPEED_IT_PASSWORD";
     private static volatile int threadCountAtStart;
-    private static LightSpeedClient client;
+    private static volatile NingAsyncHttpClientAdapter client;
 
     protected synchronized static LightSpeedClient client() {
+        return LightSpeedClientFactory.of().createClient(config(), ningClient());
+    }
+
+    protected synchronized static NingAsyncHttpClientAdapter ningClient() {
         if (client == null) {
-            client = LightSpeedClientFactory.of().createClient(config());
+            client = NingAsyncHttpClientAdapter.of(username(), password(), emptyList());
         }
         return client;
     }
