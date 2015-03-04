@@ -33,8 +33,6 @@ parallelExecution in jacoco.Config := false
 
 parallelExecution in IntegrationTest := false
 
-fork in Test := false
-
 jacoco.settings
 
 itJacoco.settings

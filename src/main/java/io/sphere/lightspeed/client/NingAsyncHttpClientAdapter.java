@@ -11,46 +11,40 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
+import java.util.Arrays;
 import java.util.Optional;
 import java.util.concurrent.*;
+import java.util.function.Predicate;
 
 import static com.ning.http.client.Realm.AuthScheme.*;
+import static java.util.Arrays.asList;
 
 public final class NingAsyncHttpClientAdapter implements LightSpeedHttpClient, AutoCloseable {
     private static final Logger LOGGER = LoggerFactory.getLogger(NingAsyncHttpClientAdapter.class);
     private final AsyncHttpClient asyncHttpClient;
     // TODO Avoid mutable
-    private CompletableFuture<List<Cookie>> cookiesFuture;
+    private CompletableFuture<Optional<Cookie>> sessionCookieFuture;
 
-    NingAsyncHttpClientAdapter(final AsyncHttpClient asyncHttpClient, final CompletableFuture<List<Cookie>> cookies) {
+    NingAsyncHttpClientAdapter(final AsyncHttpClient asyncHttpClient, final CompletableFuture<Optional<Cookie>> sessionCookieFuture) {
         this.asyncHttpClient = asyncHttpClient;
-        this.cookiesFuture = cookies;
+        this.sessionCookieFuture = sessionCookieFuture;
         LOGGER.trace("Creating " + getLogName());
     }
 
     @Override
     public CompletableFuture<HttpResponse> execute(final HttpRequest httpRequest) {
         LOGGER.debug("Executing " + httpRequest);
-        return cookiesFuture.thenCompose(cookies -> {
-            final Request request = asNingRequest(httpRequest, cookies);
-            final CompletableFuture<Response> future = wrap(asyncHttpClient.executeRequest(request));
-            if (cookies.isEmpty()) {
-                cookiesFuture = future.thenApply(Response::getCookies);
-            }
-            return future.thenApply((Response response) -> {
-                final byte[] responseBodyAsBytes = getResponseBodyAsBytes(response);
-                final Optional<byte[]> body = responseBodyAsBytes.length > 0 ? Optional.of(responseBodyAsBytes) : Optional.empty();
-                final HttpResponse httpResponse = HttpResponse.of(response.getStatusCode(), body, Optional.of(httpRequest));
-                LOGGER.debug("Response " + httpResponse);
-                return httpResponse;
-            });
+        return sessionCookieFuture.thenCompose(sessionCookie -> {
+            final Request request = asNingRequest(httpRequest, sessionCookie);
+            final CompletableFuture<Response> responseFuture = wrap(asyncHttpClient.executeRequest(request));
+            keepSession(responseFuture, sessionCookie);
+            return responseFuture.thenApply(response -> parseResponse(httpRequest, response));
         });
     }
 
     @Override
-    public CompletableFuture<List<Cookie>> cookies() {
-        return cookiesFuture;
+    public CompletableFuture<Optional<Cookie>> sessionCookie() {
+        return sessionCookieFuture;
     }
 
     @Override
@@ -62,7 +56,7 @@ public final class NingAsyncHttpClientAdapter implements LightSpeedHttpClient, A
         }
     }
 
-    public static NingAsyncHttpClientAdapter of(final String username, final String password, final List<Cookie> cookies) {
+    public static NingAsyncHttpClientAdapter of(final String username, final String password, final Optional<Cookie> sessionCookie) {
         final Realm basicAuth = new Realm.RealmBuilder()
                 .setScheme(BASIC)
                 .setPrincipal(username)
@@ -74,18 +68,18 @@ public final class NingAsyncHttpClientAdapter implements LightSpeedHttpClient, A
                 .setRealm(basicAuth)
                 .setMaxConnections(1)
                 .setMaxConnectionsPerHost(1).build();
-        return of(new AsyncHttpClient(config), cookies);
+        return of(new AsyncHttpClient(config), sessionCookie);
     }
 
-    public static NingAsyncHttpClientAdapter of(final AsyncHttpClient asyncHttpClient, final List<Cookie> cookies) {
-        return new NingAsyncHttpClientAdapter(asyncHttpClient, CompletableFuture.completedFuture(cookies));
+    public static NingAsyncHttpClientAdapter of(final AsyncHttpClient asyncHttpClient, final Optional<Cookie> sessionCookie) {
+        return new NingAsyncHttpClientAdapter(asyncHttpClient, CompletableFuture.completedFuture(sessionCookie));
     }
 
-    private Request asNingRequest(final HttpRequest request, final List<Cookie> cookies) {
+    private Request asNingRequest(final HttpRequest request, final Optional<Cookie> cookies) {
         final RequestBuilder builder = new RequestBuilder()
                 .setUrl(request.getUrl())
                 .setMethod(request.getHttpMethod().toString())
-                .setCookies(cookies);
+                .setCookies(cookies.map(Arrays::asList).orElse(asList()));
 
         request.getHeaders().getHeadersAsMap().forEach(builder::setHeader);
 
@@ -96,6 +90,26 @@ public final class NingAsyncHttpClientAdapter implements LightSpeedHttpClient, A
             }
         });
         return builder.build();
+    }
+
+    private HttpResponse parseResponse(final HttpRequest httpRequest, final Response response) {
+        final byte[] responseBodyAsBytes = getResponseBodyAsBytes(response);
+        final Optional<byte[]> body = responseBodyAsBytes.length > 0 ? Optional.of(responseBodyAsBytes) : Optional.empty();
+        final HttpResponse httpResponse = HttpResponse.of(response.getStatusCode(), body, Optional.of(httpRequest));
+        LOGGER.debug("Response " + httpResponse);
+        return httpResponse;
+    }
+
+    private void keepSession(final CompletableFuture<Response> future, final Optional<Cookie> currentSessionCookie) {
+        sessionCookieFuture = future.thenApply(response -> {
+            final Predicate<Cookie> onlySessionCookies = c -> c.getName().equals(SESSION_COOKIE);
+            final Optional<Cookie> sessionCookie = response.getCookies().stream().filter(onlySessionCookies).findFirst();
+            if (sessionCookie.isPresent()) {
+                return sessionCookie;
+            } else {
+                return currentSessionCookie;
+            }
+        });
     }
 
     private String getLogName() {

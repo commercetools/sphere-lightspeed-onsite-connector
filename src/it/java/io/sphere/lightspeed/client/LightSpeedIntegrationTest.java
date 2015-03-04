@@ -1,19 +1,20 @@
 package io.sphere.lightspeed.client;
 
+import com.ning.http.client.cookie.Cookie;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 
 import java.util.Optional;
 
-import static java.util.Collections.emptyList;
+import static io.sphere.lightspeed.client.LightSpeedHttpClient.SESSION_COOKIE;
 
 public abstract class LightSpeedIntegrationTest {
-
     private static final String LIGHTSPEED_IT_APP_URL = "LIGHTSPEED_IT_APP_URL";
     private static final String LIGHTSPEED_IT_APP_ID = "LIGHTSPEED_IT_APP_ID";
     private static final String LIGHTSPEED_IT_APP_PRIVATE_ID = "LIGHTSPEED_IT_APP_PRIVATE_ID";
     private static final String LIGHTSPEED_IT_USERNAME = "LIGHTSPEED_IT_USERNAME";
     private static final String LIGHTSPEED_IT_PASSWORD = "LIGHTSPEED_IT_PASSWORD";
+    private static final String SESSION_ID = "2wxFJQIUp5rT-pCRdniHJO5GJWxSRU1PVEVfU0VTU0lPTj00YWM2YjZiMS04ZWZiLTQzMDktODM0Ny02OTI3ZGI5NzEzNTg=";
     private static volatile int threadCountAtStart;
     private static volatile NingAsyncHttpClientAdapter client;
 
@@ -23,7 +24,8 @@ public abstract class LightSpeedIntegrationTest {
 
     protected synchronized static NingAsyncHttpClientAdapter ningClient() {
         if (client == null) {
-            client = NingAsyncHttpClientAdapter.of(username(), password(), emptyList());
+            final Cookie sessionCookie = Cookie.newValidCookie(SESSION_COOKIE, SESSION_ID, null, SESSION_ID, "/", -1, -1, true, false);
+            client = NingAsyncHttpClientAdapter.of(username(), password(), Optional.of(sessionCookie));
         }
         return client;
     }
