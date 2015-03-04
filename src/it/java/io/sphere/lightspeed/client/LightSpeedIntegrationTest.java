@@ -5,6 +5,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 import static io.sphere.lightspeed.client.LightSpeedHttpClient.SESSION_COOKIE;
 
@@ -65,9 +66,17 @@ public abstract class LightSpeedIntegrationTest {
         return getValueForEnvVar(LIGHTSPEED_IT_PASSWORD);
     }
 
-    protected static <T> T execute(final LightSpeedRequest<T> request) {
+    protected static <T> T execute(final EndpointRequest<T> request) {
+        return handleExecute(client().execute(request));
+    }
+
+    protected static <T> T execute(final ResourceRequest<T> request) {
+        return handleExecute(client().execute(request));
+    }
+
+    private static <T> T handleExecute(final CompletableFuture<T> result) {
         try {
-            return client().execute(request).get();
+            return result.get();
         } catch (final Exception e) {
             client().close();
             if (e.getCause() != null && e.getCause() instanceof RuntimeException) {

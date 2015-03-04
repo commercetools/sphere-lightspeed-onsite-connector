@@ -5,7 +5,9 @@ import java.util.concurrent.CompletableFuture;
 
 public interface LightSpeedClient extends Closeable {
 
-    <T> CompletableFuture<T> execute(final LightSpeedRequest<T> lightSpeedRequest);
+    <T> CompletableFuture<T> execute(final ResourceRequest<T> resourceRequest);
+
+    <T> CompletableFuture<T> execute(final EndpointRequest<T> endpointRequest);
 
     void close();
 

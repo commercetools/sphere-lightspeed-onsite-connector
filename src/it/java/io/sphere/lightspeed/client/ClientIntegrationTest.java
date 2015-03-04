@@ -1,9 +1,10 @@
 package io.sphere.lightspeed.client;
 
 import io.sphere.lightspeed.commands.ProductCreateCommand;
+import io.sphere.lightspeed.models.InvoiceReference;
 import io.sphere.lightspeed.models.LightSpeedProduct;
 import io.sphere.lightspeed.models.LightSpeedProductDraft;
-import io.sphere.lightspeed.queries.InvoiceQuery;
+import io.sphere.lightspeed.queries.InvoiceReferenceQuery;
 import io.sphere.sdk.http.*;
 import io.sphere.sdk.models.LocalizedStrings;
 import io.sphere.sdk.products.*;
@@ -14,6 +15,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 
 import static io.sphere.sdk.http.HttpMethod.*;
@@ -44,8 +46,9 @@ public class ClientIntegrationTest extends LightSpeedIntegrationTest {
 
     @Test
     public void testInvoiceQuery() throws Exception {
-        final InvoiceQuery query = InvoiceQuery.of();
-        assertThat(execute(query).size()).isGreaterThanOrEqualTo(0);
+        final InvoiceReferenceQuery query = InvoiceReferenceQuery.of();
+        final List<InvoiceReference> invoices = execute(query);
+        assertThat(invoices.size()).isGreaterThanOrEqualTo(0);
     }
 
     private ProductProjection product() {

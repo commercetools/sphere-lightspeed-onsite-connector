@@ -6,9 +6,9 @@ import io.sphere.sdk.client.JsonEndpoint;
 
 import java.util.List;
 
-public class InvoiceQuery extends DefaultModelQuery<InvoiceReference> {
+public class InvoiceReferenceQuery extends BaseModelQuery<InvoiceReference> {
 
-    private InvoiceQuery() {
+    private InvoiceReferenceQuery() {
         super(JsonEndpoint.of(InvoiceReference.typeReference(), "/invoices/"), resultTypeReference());
     }
 
@@ -16,12 +16,12 @@ public class InvoiceQuery extends DefaultModelQuery<InvoiceReference> {
         return new TypeReference<List<InvoiceReference>>(){
             @Override
             public String toString() {
-                return "TypeReference<List<Invoice>>";
+                return "TypeReference<List<InvoiceReference>>";
             }
         };
     }
 
-    public static InvoiceQuery of() {
-        return new InvoiceQuery();
+    public static InvoiceReferenceQuery of() {
+        return new InvoiceReferenceQuery();
     }
 }

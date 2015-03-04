@@ -5,7 +5,7 @@ import io.sphere.sdk.http.HttpResponse;
 
 import java.util.function.Function;
 
-public interface LightSpeedRequest<T> {
+interface LightSpeedRequest<T> {
 
     Function<HttpResponse, T> resultMapper();
 

@@ -10,11 +10,11 @@ import io.sphere.sdk.http.HttpResponse;
 import java.util.List;
 import java.util.function.Function;
 
-public abstract class DefaultModelQuery<T> extends LightSpeedRequestBase implements Query<T> {
+public abstract class BaseModelQuery<T> extends LightSpeedRequestBase implements Query<T> {
     private final JsonEndpoint<T> endpoint;
     private final Function<HttpResponse, List<T>> resultMapper;
 
-    public DefaultModelQuery(final JsonEndpoint<T> endpoint, TypeReference<List<T>> queryResultTypeReference) {
+    public BaseModelQuery(final JsonEndpoint<T> endpoint, TypeReference<List<T>> queryResultTypeReference) {
         this.endpoint = endpoint;
         resultMapper = LightSpeedRequestBase.resultMapperOf(queryResultTypeReference);
     }
