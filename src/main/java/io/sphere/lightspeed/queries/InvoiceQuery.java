@@ -1,19 +1,19 @@
 package io.sphere.lightspeed.queries;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import io.sphere.lightspeed.models.Invoice;
+import io.sphere.lightspeed.models.InvoiceReference;
 import io.sphere.sdk.client.JsonEndpoint;
 
 import java.util.List;
 
-public class InvoiceQuery extends DefaultModelQuery<Invoice> {
+public class InvoiceQuery extends DefaultModelQuery<InvoiceReference> {
 
     private InvoiceQuery() {
-        super(JsonEndpoint.of(Invoice.typeReference(), "/invoices/"), resultTypeReference());
+        super(JsonEndpoint.of(InvoiceReference.typeReference(), "/invoices/"), resultTypeReference());
     }
 
-    public static TypeReference<List<Invoice>> resultTypeReference() {
-        return new TypeReference<List<Invoice>>(){
+    public static TypeReference<List<InvoiceReference>> resultTypeReference() {
+        return new TypeReference<List<InvoiceReference>>(){
             @Override
             public String toString() {
                 return "TypeReference<List<Invoice>>";
