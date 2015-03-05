@@ -13,6 +13,7 @@ import static io.sphere.lightspeed.utils.PriceUtils.selectPrice;
 
 @JacksonXmlRootElement(localName = "product")
 public class LightSpeedProduct extends Base {
+    private String id;
     private String code;
 
     @JacksonXmlProperty(localName = "sell_price")
@@ -21,9 +22,14 @@ public class LightSpeedProduct extends Base {
     private LightSpeedProduct() {
     }
 
-    LightSpeedProduct(final String code, final double sellPrice) {
+    LightSpeedProduct(final String id, final String code, final double sellPrice) {
+        this.id = id;
         this.code = code;
         this.sellPrice = sellPrice;
+    }
+
+    public String getId() {
+        return id;
     }
 
     public String getCode() {
@@ -43,14 +49,11 @@ public class LightSpeedProduct extends Base {
         };
     }
 
-    public static Optional<LightSpeedProduct> of(ProductProjection product) {
-        return selectPrice(product).map(p -> new LightSpeedProduct(product.getId(), priceAmount(p)));
-    }
-
     @Override
     public String toString() {
-        return "LSProduct{" +
-                "code='" + code + '\'' +
+        return "LightSpeedProduct{" +
+                "id='" + id + '\'' +
+                ", code='" + code + '\'' +
                 ", sellPrice=" + sellPrice +
                 '}';
     }
@@ -61,10 +64,11 @@ public class LightSpeedProduct extends Base {
         if (o == null || getClass() != o.getClass()) return false;
         if (!super.equals(o)) return false;
 
-        final LightSpeedProduct lsProduct = (LightSpeedProduct) o;
+        final LightSpeedProduct that = (LightSpeedProduct) o;
 
-        if (Double.compare(lsProduct.sellPrice, sellPrice) != 0) return false;
-        if (code != null ? !code.equals(lsProduct.code) : lsProduct.code != null) return false;
+        if (Double.compare(that.sellPrice, sellPrice) != 0) return false;
+        if (code != null ? !code.equals(that.code) : that.code != null) return false;
+        if (id != null ? !id.equals(that.id) : that.id != null) return false;
 
         return true;
     }
@@ -73,6 +77,7 @@ public class LightSpeedProduct extends Base {
     public int hashCode() {
         int result = super.hashCode();
         long temp;
+        result = 31 * result + (id != null ? id.hashCode() : 0);
         result = 31 * result + (code != null ? code.hashCode() : 0);
         temp = Double.doubleToLongBits(sellPrice);
         result = 31 * result + (int) (temp ^ (temp >>> 32));
