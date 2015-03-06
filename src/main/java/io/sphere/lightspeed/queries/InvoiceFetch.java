@@ -2,6 +2,7 @@ package io.sphere.lightspeed.queries;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import io.sphere.lightspeed.models.Invoice;
+import io.sphere.lightspeed.models.InvoiceReference;
 
 public class InvoiceFetch extends BaseModelFetch<Invoice> {
 
@@ -18,7 +19,7 @@ public class InvoiceFetch extends BaseModelFetch<Invoice> {
         };
     }
 
-    public static InvoiceFetch of(final String resourceUrl) {
-        return new InvoiceFetch(resourceUrl);
+    public static InvoiceFetch of(final InvoiceReference invoiceRef) {
+        return new InvoiceFetch(invoiceRef.getUri());
     }
 }

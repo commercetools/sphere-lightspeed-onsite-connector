@@ -1,7 +1,6 @@
 package io.sphere.lightspeed.client;
 
 import io.sphere.lightspeed.commands.ProductCreateCommand;
-import io.sphere.lightspeed.commands.ProductDeleteCommand;
 import io.sphere.lightspeed.models.InvoiceReference;
 import io.sphere.lightspeed.models.LightSpeedProduct;
 import io.sphere.lightspeed.models.LightSpeedProductDraft;
@@ -54,8 +53,8 @@ public class ClientIntegrationTest extends LightSpeedIntegrationTest {
     private ProductProjection product() {
         final ProductType productType = ProductTypeBuilder.of("id-product-type", "name", "description", emptyList()).build();
         final ProductVariant variant = ProductVariantBuilder.ofMasterVariant()
-                .sku("sku")
-                .price(Price.of(BigDecimal.valueOf(10), CurrencyUnitBuilder.of("EUR", KEY_PROVIDER).build())).build();
+                .price(Price.of(BigDecimal.valueOf(10), CurrencyUnitBuilder.of("EUR", KEY_PROVIDER).build()))
+                .sku("sku").build();
         final ProductData productData = ProductDataBuilder.of(LocalizedStrings.ofEnglishLocale("Name"), LocalizedStrings.empty(), variant)
                 .description(LocalizedStrings.ofEnglishLocale("Description")).build();
         final Product product = ProductBuilder.of(productType, ProductCatalogDataBuilder.ofStaged(productData).build()).id("id-product").build();

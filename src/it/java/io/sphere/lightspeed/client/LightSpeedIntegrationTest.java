@@ -38,12 +38,12 @@ public abstract class LightSpeedIntegrationTest {
     private static String getValueForEnvVar(final String key) {
         return Optional.ofNullable(System.getenv(key))
                 .orElseThrow(() -> new RuntimeException(
-                        "Missing environment variable " + key + ", please provide the following environment variables from a NEW TEST PROJECT (you can keep it for further tests):\n" +
-                                "export LIGHTSPEED_IT_APP_URL=\"https://localhost:9630/api\"\n" +
-                                "export LIGHTSPEED_IT_USERNAME=\"YOUR username\"\n" +
-                                "export LIGHTSPEED_IT_PASSWORD=\"YOUR password\"\n" +
-                                "export LIGHTSPEED_IT_APP_ID=\"YOUR app ID\"\n" +
-                                "export LIGHTSPEED_IT_APP_PRIVATE_ID=\"YOUR app private ID\""));
+                        "Missing environment variable " + key + ", please provide the following environment variables:\n" +
+                                "export " + LIGHTSPEED_IT_APP_URL + "=\"https://localhost:9630/api\"\n" +
+                                "export " + LIGHTSPEED_IT_USERNAME + "=\"YOUR username\"\n" +
+                                "export " + LIGHTSPEED_IT_PASSWORD + "=\"YOUR password\"\n" +
+                                "export " + LIGHTSPEED_IT_APP_ID + "=\"YOUR app ID\"\n" +
+                                "export " + LIGHTSPEED_IT_APP_PRIVATE_ID + "=\"YOUR app private ID\""));
     }
 
     protected static String appUrl() {

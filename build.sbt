@@ -2,6 +2,7 @@ libraryDependencies ++=
     "com.ning" % "async-http-client" % "1.9.11" ::
     "io.sphere.sdk.jvm" % "models" % "1.0.0-M11-2015-03-02-14-45-33-ccddfa5-SNAPSHOT" ::
     "io.sphere.sdk.jvm" % "java-client" % "1.0.0-M11-2015-03-02-14-45-33-ccddfa5-SNAPSHOT" ::
+    "com.typesafe.akka" %% "akka-actor" % "2.3.9" ::
     "com.fasterxml.jackson.dataformat" % "jackson-dataformat-xml" % "2.5.1" ::
     "org.codehaus.woodstox" % "woodstox-core-asl" % "4.4.1" ::
     "com.novocode" % "junit-interface" % "0.10" % "test,it" ::
