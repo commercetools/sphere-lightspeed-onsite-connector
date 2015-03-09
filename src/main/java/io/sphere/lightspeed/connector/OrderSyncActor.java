@@ -13,10 +13,10 @@ import io.sphere.lightspeed.queries.InvoiceReferenceQuery;
 import scala.concurrent.duration.Duration;
 import scala.concurrent.duration.FiniteDuration;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.stream.Collectors.toList;
 
 /**
  * Actor that synchronizes orders from LightSpeed to SPHERE.IO.
@@ -76,22 +76,17 @@ public class OrderSyncActor extends UntypedActor {
     }
 
     private List<Invoice> fetchInvoices(final List<InvoiceReference> invoiceRefs) {
-        final List<Invoice> invoices = new ArrayList<>();
-        for (InvoiceReference invoiceRef : invoiceRefs) {
-            invoices.add(client.execute(InvoiceFetch.of(invoiceRef)).join());
-        }
-        return invoices;
+        return invoiceRefs.parallelStream().map(ref -> client.execute(InvoiceFetch.of(ref)).join()).collect(toList());
     }
 
     private void importOrders(final List<Invoice> invoices) {
-        for (Invoice invoice : invoices) {
-            System.out.println("********** IMPORTING ORDER " + invoice.getId());
-        }
+        invoices.forEach(i -> System.out.println("********** IMPORTING ORDER " + i.getId()));
     }
 
     private void scheduleFor(final int intervalInSeconds) {
         final FiniteDuration delay = Duration.create(intervalInSeconds, SECONDS);
-        getContext().system().scheduler().scheduleOnce(delay, getSelf(), new SyncOrderMessage(), getContext().dispatcher(), null);
+        final SyncOrderMessage msg = new SyncOrderMessage();
+        getContext().system().scheduler().scheduleOnce(delay, self(), msg, getContext().dispatcher(), self());
     }
 
     static final class SyncOrderMessage {
