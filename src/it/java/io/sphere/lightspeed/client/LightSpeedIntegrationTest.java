@@ -78,7 +78,6 @@ public abstract class LightSpeedIntegrationTest {
         try {
             return result.get();
         } catch (final Exception e) {
-            client().close();
             if (e.getCause() != null && e.getCause() instanceof RuntimeException) {
                 throw (RuntimeException) e.getCause();
             } else {

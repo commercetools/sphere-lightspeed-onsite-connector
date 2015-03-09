@@ -19,11 +19,10 @@ import java.util.List;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
- * Actor that synchronizes orders from LightSpeed to SPHERE.IO every 30 seconds.
+ * Actor that synchronizes orders from LightSpeed to SPHERE.IO.
  * It will not schedule a new synchronization until the last one has finished.
  */
 public class OrderSyncActor extends UntypedActor {
-    private static final String SYNC_MSG = "sync-order";
     private final LoggingAdapter log = Logging.getLogger(getContext().system(), this);
     private final LightSpeedClient client;
     private final int intervalInSeconds;
@@ -45,8 +44,7 @@ public class OrderSyncActor extends UntypedActor {
 
     @Override
     public void onReceive(final Object message) throws Exception {
-        if (message.equals(SYNC_MSG)) {
-            log.info("Syncing orders from LightSpeed to SPHERE.IO...");
+        if (message instanceof SyncOrderMessage) {
             synchronize();
         } else {
             unhandled(message);
@@ -70,6 +68,7 @@ public class OrderSyncActor extends UntypedActor {
     }
 
     private void synchronize() {
+        log.info("Syncing orders from LightSpeed to SPHERE.IO...");
         client.execute(InvoiceReferenceQuery.of())
                 .thenApply(this::fetchInvoices)
                 .thenAccept(this::importOrders)
@@ -79,19 +78,24 @@ public class OrderSyncActor extends UntypedActor {
     private List<Invoice> fetchInvoices(final List<InvoiceReference> invoiceRefs) {
         final List<Invoice> invoices = new ArrayList<>();
         for (InvoiceReference invoiceRef : invoiceRefs) {
-            client.execute(InvoiceFetch.of(invoiceRef)).thenAccept(invoices::add);
+            invoices.add(client.execute(InvoiceFetch.of(invoiceRef)).join());
         }
         return invoices;
     }
 
     private void importOrders(final List<Invoice> invoices) {
         for (Invoice invoice : invoices) {
-            System.out.println("Importing " + invoice.getId());
+            System.out.println("********** IMPORTING ORDER " + invoice.getId());
         }
     }
 
     private void scheduleFor(final int intervalInSeconds) {
         final FiniteDuration delay = Duration.create(intervalInSeconds, SECONDS);
-        getContext().system().scheduler().scheduleOnce(delay, getSelf(), SYNC_MSG, getContext().dispatcher(), null);
+        getContext().system().scheduler().scheduleOnce(delay, getSelf(), new SyncOrderMessage(), getContext().dispatcher(), null);
+    }
+
+    static final class SyncOrderMessage {
+        SyncOrderMessage() {
+        }
     }
 }
