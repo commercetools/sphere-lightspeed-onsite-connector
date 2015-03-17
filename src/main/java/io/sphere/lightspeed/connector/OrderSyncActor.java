@@ -10,10 +10,16 @@ import io.sphere.lightspeed.models.Invoice;
 import io.sphere.lightspeed.models.InvoiceReference;
 import io.sphere.lightspeed.queries.InvoiceFetch;
 import io.sphere.lightspeed.queries.InvoiceReferenceQuery;
+import io.sphere.sdk.client.SphereClient;
+import io.sphere.sdk.orders.Order;
+import io.sphere.sdk.orders.queries.OrderQuery;
+import io.sphere.sdk.queries.Predicate;
+import io.sphere.sdk.queries.StringQuerySortingModel;
 import scala.concurrent.duration.Duration;
 import scala.concurrent.duration.FiniteDuration;
 
 import java.util.List;
+import java.util.Optional;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.toList;
@@ -24,11 +30,13 @@ import static java.util.stream.Collectors.toList;
  */
 public class OrderSyncActor extends UntypedActor {
     private final LoggingAdapter log = Logging.getLogger(getContext().system(), this);
-    private final LightSpeedClient client;
+    private final SphereClient sphereClient;
+    private final LightSpeedClient lightspeedClient;
     private final int intervalInSeconds;
 
-    private OrderSyncActor(final LightSpeedClient client, final int intervalInSeconds) {
-        this.client = client;
+    private OrderSyncActor(final SphereClient sphereClient, final LightSpeedClient lightspeedClient, final int intervalInSeconds) {
+        this.sphereClient = sphereClient;
+        this.lightspeedClient = lightspeedClient;
         this.intervalInSeconds = intervalInSeconds;
     }
 
@@ -56,31 +64,36 @@ public class OrderSyncActor extends UntypedActor {
      * @param intervalInSeconds Interval in seconds needed to execute the synchronization.
      * @return a Props for creating this actor.
      */
-    public static Props props(final LightSpeedClient client, final int intervalInSeconds) {
+    public static Props props(final SphereClient sphereClient, final LightSpeedClient lightspeedClient, final int intervalInSeconds) {
         return Props.create(new Creator<OrderSyncActor>() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public OrderSyncActor create() throws Exception {
-                return new OrderSyncActor(client, intervalInSeconds);
+                return new OrderSyncActor(sphereClient, lightspeedClient, intervalInSeconds);
             }
         });
     }
 
     private void synchronize() {
         log.info("Syncing orders from LightSpeed to SPHERE.IO...");
-        client.execute(InvoiceReferenceQuery.of())
+        lightspeedClient.execute(InvoiceReferenceQuery.of())
                 .thenApply(this::fetchInvoices)
                 .thenAccept(this::importOrders)
                 .thenRun(() -> scheduleFor(intervalInSeconds));
     }
 
     private List<Invoice> fetchInvoices(final List<InvoiceReference> invoiceRefs) {
-        return invoiceRefs.parallelStream().map(ref -> client.execute(InvoiceFetch.of(ref)).join()).collect(toList());
+        return invoiceRefs.parallelStream().map(ref -> lightspeedClient.execute(InvoiceFetch.of(ref)).join()).collect(toList());
     }
 
     private void importOrders(final List<Invoice> invoices) {
-        invoices.forEach(i -> System.out.println("********** IMPORTING ORDER " + i.getId()));
+        invoices.forEach(i -> {
+            final Predicate<Order> predicate = new StringQuerySortingModel<Order>(Optional.empty(), "orderNumber").is(i.getId());
+            sphereClient.execute(OrderQuery.of().withPredicate(predicate));
+            System.out.println("********** IMPORTING ORDER " + i.getId());
+
+        });
     }
 
     private void scheduleFor(final int intervalInSeconds) {

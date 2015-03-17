@@ -1,56 +1,41 @@
 package io.sphere.lightspeed.connector;
 
 import akka.actor.ActorSystem;
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
 import io.sphere.lightspeed.client.LightSpeedClient;
 import io.sphere.lightspeed.client.LightSpeedClientFactory;
 import io.sphere.lightspeed.client.LightSpeedConfig;
-
-import java.util.Optional;
+import io.sphere.sdk.client.SphereClient;
+import io.sphere.sdk.client.SphereClientConfig;
+import io.sphere.sdk.client.SphereClientFactory;
 
 public class Main {
-    private static final String LIGHTSPEED_IT_APP_URL = "LIGHTSPEED_IT_APP_URL";
-    private static final String LIGHTSPEED_IT_APP_ID = "LIGHTSPEED_IT_APP_ID";
-    private static final String LIGHTSPEED_IT_APP_PRIVATE_ID = "LIGHTSPEED_IT_APP_PRIVATE_ID";
-    private static final String LIGHTSPEED_IT_USERNAME = "LIGHTSPEED_IT_USERNAME";
-    private static final String LIGHTSPEED_IT_PASSWORD = "LIGHTSPEED_IT_PASSWORD";
 
     public static void main(String[] args) {
-        // TODO Properly inject configuration
-        final LightSpeedConfig config = LightSpeedConfig.of(appUrl(), appId(), appPrivateId(), username(), password());
-        final LightSpeedClient client = LightSpeedClientFactory.of().createClient(config);
+        final String storePrefix = ConfigFactory.load().getString("store.prefix");
+        final LightSpeedClient lightspeedClient = LightSpeedClientFactory.of().createClient(lightspeedConfig());
+        final SphereClient sphereClient = SphereClientFactory.of().createClient(sphereConfig());
 
         final ActorSystem system = ActorSystem.create();
-        system.actorOf(OrderSyncActor.props(client, 30));
+        system.actorOf(OrderSyncActor.props(sphereClient, lightspeedClient, 5));
     }
 
-    private static String appUrl() {
-        return getValueForEnvVar(LIGHTSPEED_IT_APP_URL);
+    private static LightSpeedConfig lightspeedConfig() {
+        final Config config = ConfigFactory.load();
+        final String appUrl = config.getString("lightspeed.app.url");
+        final String appId = config.getString("lightspeed.app.id");
+        final String appPrivateId = config.getString("lightspeed.app.private.id");
+        final String username = config.getString("lightspeed.username");
+        final String password = config.getString("lightspeed.password");
+        return LightSpeedConfig.of(appUrl, appId, appPrivateId, username, password);
     }
 
-    private static String appId() {
-        return getValueForEnvVar(LIGHTSPEED_IT_APP_ID);
-    }
-
-    private static String appPrivateId() {
-        return getValueForEnvVar(LIGHTSPEED_IT_APP_PRIVATE_ID);
-    }
-
-    private static String username() {
-        return getValueForEnvVar(LIGHTSPEED_IT_USERNAME);
-    }
-
-    private static String password() {
-        return getValueForEnvVar(LIGHTSPEED_IT_PASSWORD);
-    }
-
-    private static String getValueForEnvVar(final String key) {
-        return Optional.ofNullable(System.getenv(key))
-                .orElseThrow(() -> new RuntimeException(
-                        "Missing environment variable " + key + ", please provide the following environment variables:\n" +
-                                "export " + LIGHTSPEED_IT_APP_URL + "=\"https://localhost:9630/api\"\n" +
-                                "export " + LIGHTSPEED_IT_USERNAME + "=\"YOUR username\"\n" +
-                                "export " + LIGHTSPEED_IT_PASSWORD + "=\"YOUR password\"\n" +
-                                "export " + LIGHTSPEED_IT_APP_ID + "=\"YOUR app ID\"\n" +
-                                "export " + LIGHTSPEED_IT_APP_PRIVATE_ID + "=\"YOUR app private ID\""));
+    private static SphereClientConfig sphereConfig() {
+        final Config config = ConfigFactory.load();
+        final String projectKey = config.getString("sphere.project.key");
+        final String clientId = config.getString("sphere.client.id");
+        final String clientSecret = config.getString("sphere.client.secret");
+        return SphereClientConfig.of(projectKey, clientId, clientSecret);
     }
 }
