@@ -9,6 +9,14 @@ import io.sphere.sdk.http.HttpResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+import java.security.GeneralSecurityException;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.Optional;
 import java.util.concurrent.*;
 
@@ -48,12 +56,14 @@ public final class NingAsyncHttpClientAdapter implements LightSpeedHttpClient, A
                 .setUsePreemptiveAuth(true)
                 .setPrincipal(username)
                 .setPassword(password).build();
-        final AsyncHttpClientConfig config = new AsyncHttpClientConfig.Builder()
-                .setCompressionEnforced(true)
-                .setAcceptAnyCertificate(true)
-                .setHostnameVerifier(null)
-                .setRealm(basicAuth).build();
-        return of(new AsyncHttpClient(config), sessionCookie);
+        try {
+            final AsyncHttpClientConfig config = new AsyncHttpClientConfig.Builder()
+                    .setSSLContext(tolerantSSLContext())
+                    .setRealm(basicAuth).build();
+            return of(new AsyncHttpClient(config), sessionCookie);
+        } catch (GeneralSecurityException e) {
+            throw new SslContextException("Not able to create a SSL context that accepts all certificates", e);
+        }
     }
 
     public static NingAsyncHttpClientAdapter of(final AsyncHttpClient asyncHttpClient, final Optional<Cookie> sessionCookie) {
@@ -62,5 +72,18 @@ public final class NingAsyncHttpClientAdapter implements LightSpeedHttpClient, A
 
     private String getLogName() {
         return this.getClass().getCanonicalName();
+    }
+
+    private static SSLContext tolerantSSLContext() throws KeyManagementException, NoSuchAlgorithmException {
+        final SSLContext context = SSLContext.getInstance("SSL");
+        context.init(null, new TrustManager[]{new X509TrustManager() {
+                @Override
+                public void checkClientTrusted(final X509Certificate[] x509Certificates, final String s) throws CertificateException { }
+                @Override
+                public void checkServerTrusted(final X509Certificate[] x509Certificates, final String s) throws CertificateException { }
+                @Override
+                public X509Certificate[] getAcceptedIssuers() { return new X509Certificate[0]; }
+            }}, null);
+        return context;
     }
 }

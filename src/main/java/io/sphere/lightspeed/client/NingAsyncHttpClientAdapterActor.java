@@ -14,7 +14,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -24,7 +23,6 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.function.Predicate;
 
 import static io.sphere.lightspeed.client.LightSpeedHttpClient.SESSION_COOKIE;
-import static java.util.Arrays.asList;
 
 class NingAsyncHttpClientAdapterActor extends UntypedActor {
     private static final Logger LOGGER = LoggerFactory.getLogger(NingAsyncHttpClientAdapterActor.class);
@@ -106,17 +104,21 @@ class NingAsyncHttpClientAdapterActor extends UntypedActor {
     }
 
     private CompletableFuture<Response> execute(final HttpRequest httpRequest, final Optional<Cookie> sessionCookie) {
-        final Request request = asNingRequest(httpRequest, sessionCookie);
-        return wrap(asyncHttpClient.executeRequest(request));
+        try {
+            final Request request = asNingRequest(httpRequest, sessionCookie);
+            return wrap(asyncHttpClient.executeRequest(request));
+        } catch (IOException e) {
+            throw new ClientException(e);
+        }
     }
 
-    private Request asNingRequest(final HttpRequest request, final Optional<Cookie> cookies) {
+    private Request asNingRequest(final HttpRequest request, final Optional<Cookie> cookie) {
         final RequestBuilder builder = new RequestBuilder()
                 .setUrl(request.getUrl())
-                .setMethod(request.getHttpMethod().toString())
-                .setCookies(cookies.map(Arrays::asList).orElse(asList()));
+                .setMethod(request.getHttpMethod().toString());
 
-        request.getHeaders().getHeadersAsMap().forEach(builder::setHeader);
+        cookie.ifPresent(c -> builder.setHeader("Cookie", String.format("%s=%s", c.getName(), c.getRawValue())));
+        request.getHeaders().getHeadersAsMap().forEach((name, values) -> values.forEach(value -> builder.addHeader(name, value)));
 
         request.getBody().ifPresent(body -> {
             if (body instanceof StringHttpRequestBody) {
