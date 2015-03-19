@@ -11,31 +11,33 @@ import io.sphere.sdk.client.SphereClientConfig;
 import io.sphere.sdk.client.SphereClientFactory;
 
 public class Main {
+    public static final int ORDER_SYNC_INTERVAL_IN_SEC = 10;
 
     public static void main(String[] args) {
-        final String storePrefix = ConfigFactory.load().getString("store.prefix");
-        final LightSpeedClient lightspeedClient = LightSpeedClientFactory.of().createClient(lightspeedConfig());
-        final SphereClient sphereClient = SphereClientFactory.of().createClient(sphereConfig());
+        final Config config = ConfigFactory.load();
+        final String storeId = config.getString("store.id");
+        final SphereClient sphereClient = createSphereClient(config);
+        final LightSpeedClient lightspeedClient = createLightspeedClient(config);
 
         final ActorSystem system = ActorSystem.create();
-        system.actorOf(OrderSyncActor.props(sphereClient, lightspeedClient, 5));
+        system.actorOf(OrderSyncActor.props(sphereClient, lightspeedClient, storeId, ORDER_SYNC_INTERVAL_IN_SEC));
     }
 
-    private static LightSpeedConfig lightspeedConfig() {
-        final Config config = ConfigFactory.load();
+    private static LightSpeedClient createLightspeedClient(final Config config) {
         final String appUrl = config.getString("lightspeed.app.url");
         final String appId = config.getString("lightspeed.app.id");
         final String appPrivateId = config.getString("lightspeed.app.private.id");
         final String username = config.getString("lightspeed.username");
         final String password = config.getString("lightspeed.password");
-        return LightSpeedConfig.of(appUrl, appId, appPrivateId, username, password);
+        final LightSpeedConfig clientConfig = LightSpeedConfig.of(appUrl, appId, appPrivateId, username, password);
+        return LightSpeedClientFactory.of().createClient(clientConfig);
     }
 
-    private static SphereClientConfig sphereConfig() {
-        final Config config = ConfigFactory.load();
+    private static SphereClient createSphereClient(final Config config) {
         final String projectKey = config.getString("sphere.project.key");
         final String clientId = config.getString("sphere.client.id");
         final String clientSecret = config.getString("sphere.client.secret");
-        return SphereClientConfig.of(projectKey, clientId, clientSecret);
+        final SphereClientConfig clientConfig = SphereClientConfig.of(projectKey, clientId, clientSecret);
+        return SphereClientFactory.of().createClient(clientConfig);
     }
 }
