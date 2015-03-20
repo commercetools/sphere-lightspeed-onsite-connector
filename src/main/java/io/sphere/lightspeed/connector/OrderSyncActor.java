@@ -47,11 +47,11 @@ public class OrderSyncActor extends UntypedActor {
     private final LightSpeedClient lightspeedClient;
     private final CompletableFuture<Channel> channelFuture;
     private final String storeId;
-    private final int intervalInSeconds;
-    private int currentIntervalInSeconds;
+    private final long intervalInSeconds;
+    private long currentIntervalInSeconds;
 
     private OrderSyncActor(final SphereClient sphereClient, final LightSpeedClient lightspeedClient,
-                           final CompletableFuture<Channel> channelFuture, final String storeId, final int intervalInSeconds) {
+                           final CompletableFuture<Channel> channelFuture, final String storeId, final long intervalInSeconds) {
         this.sphereClient = sphereClient;
         this.lightspeedClient = lightspeedClient;
         this.channelFuture = channelFuture;
@@ -85,7 +85,7 @@ public class OrderSyncActor extends UntypedActor {
      * @return a Props for creating this actor.
      */
     public static Props props(final SphereClient sphereClient, final LightSpeedClient lightspeedClient,
-                              final String storeId, final int intervalInSeconds) {
+                              final String storeId, final long intervalInSeconds) {
         return Props.create(new Creator<OrderSyncActor>() {
             private static final long serialVersionUID = 1L;
 
@@ -172,7 +172,7 @@ public class OrderSyncActor extends UntypedActor {
         return future;
     }
 
-    private void scheduleFor(final int intervalInSeconds) {
+    private void scheduleFor(final long intervalInSeconds) {
         final FiniteDuration delay = Duration.create(intervalInSeconds, SECONDS);
         final SyncOrderMessage msg = new SyncOrderMessage();
         getContext().system().scheduler().scheduleOnce(delay, self(), msg, getContext().dispatcher(), self());

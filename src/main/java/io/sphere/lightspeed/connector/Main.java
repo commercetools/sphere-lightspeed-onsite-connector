@@ -11,20 +11,20 @@ import io.sphere.sdk.client.SphereClientConfig;
 import io.sphere.sdk.client.SphereClientFactory;
 
 public class Main {
-    public static final int ORDER_SYNC_INTERVAL_IN_SEC = 10;
 
     public static void main(String[] args) {
         final Config config = ConfigFactory.load();
         final String storeId = config.getString("store.id");
+        final long intervalInSeconds = config.getLong("sync.interval.orders");
         final SphereClient sphereClient = createSphereClient(config);
-        final LightSpeedClient lightspeedClient = createLightspeedClient(config);
+        final LightSpeedClient lightspeedClient = createLightSpeedClient(config);
 
         final ActorSystem system = ActorSystem.create();
-        system.actorOf(OrderSyncActor.props(sphereClient, lightspeedClient, storeId, ORDER_SYNC_INTERVAL_IN_SEC));
+        system.actorOf(OrderSyncActor.props(sphereClient, lightspeedClient, storeId, intervalInSeconds));
     }
 
-    private static LightSpeedClient createLightspeedClient(final Config config) {
-        final String appUrl = config.getString("lightspeed.app.url");
+    private static LightSpeedClient createLightSpeedClient(final Config config) {
+        final String appUrl = config.getString("olightspeed.app.url");
         final String appId = config.getString("lightspeed.app.id");
         final String appPrivateId = config.getString("lightspeed.app.private.id");
         final String username = config.getString("lightspeed.username");
