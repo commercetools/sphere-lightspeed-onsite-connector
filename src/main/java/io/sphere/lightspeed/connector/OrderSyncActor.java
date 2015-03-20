@@ -119,7 +119,6 @@ public class OrderSyncActor extends UntypedActor {
     }
 
     private void importInvoiceToSphere(final Invoice invoice) {
-        System.out.println(invoice);
         final String orderNumber = invoice.getOrderNumber(storeId);
         fetchOrderFromSphere(orderNumber)
                 .thenCompose(order -> {

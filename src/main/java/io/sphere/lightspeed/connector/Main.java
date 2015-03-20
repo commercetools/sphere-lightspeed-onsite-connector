@@ -24,7 +24,7 @@ public class Main {
     }
 
     private static LightSpeedClient createLightSpeedClient(final Config config) {
-        final String appUrl = config.getString("olightspeed.app.url");
+        final String appUrl = config.getString("lightspeed.app.url");
         final String appId = config.getString("lightspeed.app.id");
         final String appPrivateId = config.getString("lightspeed.app.private.id");
         final String username = config.getString("lightspeed.username");
