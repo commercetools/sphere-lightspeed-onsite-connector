@@ -19,6 +19,7 @@ import static io.sphere.lightspeed.utils.XmlUtils.toXml;
 import static io.sphere.lightspeed.utils.XmlUtils.readStringFromResource;
 import static io.sphere.sdk.products.ProductProjectionType.*;
 import static java.util.Collections.emptyList;
+import static java.util.Locale.ENGLISH;
 import static javax.money.AbstractContext.KEY_PROVIDER;
 import static org.fest.assertions.Assertions.assertThat;
 
@@ -33,30 +34,30 @@ public class LightSpeedProductTest {
     @Test
     public void productIsNotCreatedWhenItHasNoPrice() throws Exception {
         final ProductProjection sphereProduct = someProductWithoutPrice();
-        assertThat(LightSpeedProduct.of(sphereProduct).isPresent()).isFalse();
+        assertThat(LightSpeedProductDraft.of(sphereProduct, ENGLISH).isPresent()).isFalse();
     }
 
     @Test
     public void productCorrespondsToSphereProduct() throws Exception {
         final ProductProjection sphereProduct = someProductWithPrice();
-        final LightSpeedProduct lsProduct = LightSpeedProduct.of(sphereProduct).get();
-        assertThat(lsProduct.getCode()).isEqualTo(sphereProduct.getId());
-        assertThat(lsProduct.getSellPrice()).isEqualTo(selectPriceAmount(sphereProduct).get());
+        final LightSpeedProductDraft draft = LightSpeedProductDraft.of(sphereProduct, ENGLISH).get();
+        assertThat(draft.getCode()).isEqualTo(sphereProduct.getId());
+        assertThat(draft.getSellPrice()).isEqualTo(selectPriceAmount(sphereProduct).get());
     }
 
     @Test
     public void xmlCorrespondsToProduct() throws Exception {
-        final LightSpeedProduct product = LightSpeedProduct.of(someProductWithPrice()).get();
-        final String xml = toXml(product);
+        final LightSpeedProductDraft draft = LightSpeedProductDraft.of(someProductWithPrice(), ENGLISH).get();
+        final String xml = toXml(draft);
         final String expected = readStringFromResource("product.xml");
         XMLAssert.assertXMLEqual(xml, expected);
     }
 
     @Test
     public void productCorrespondsToXml() throws Exception {
-        final LightSpeedProduct product = readObjectFromResource("product.xml", LightSpeedProduct.class);
-        final LightSpeedProduct expected = LightSpeedProduct.of(someProductWithPrice()).get();
-        assertThat(product).isEqualTo(expected);
+        final LightSpeedProductDraft draft = readObjectFromResource("product.xml", LightSpeedProductDraft.class);
+        final LightSpeedProductDraft expected = LightSpeedProductDraft.of(someProductWithPrice(), ENGLISH).get();
+        assertThat(draft).isEqualTo(expected);
     }
 
     private ProductProjection someProductWithoutPrice() {

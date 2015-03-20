@@ -6,7 +6,7 @@ import io.sphere.sdk.client.JsonEndpoint;
 
 import java.util.List;
 
-public class InvoiceReferenceQuery extends BaseModelQuery<InvoiceReference> {
+public class InvoiceReferenceQuery extends QueryDslImpl<InvoiceReference> {
 
     private InvoiceReferenceQuery() {
         super(JsonEndpoint.of(InvoiceReference.typeReference(), "/invoices/"), resultTypeReference());

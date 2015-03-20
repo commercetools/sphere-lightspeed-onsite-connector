@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import io.sphere.sdk.models.Base;
-import io.sphere.sdk.models.LocalizedStrings;
 import io.sphere.sdk.products.Price;
 import io.sphere.sdk.products.ProductProjection;
 
@@ -63,9 +62,8 @@ public class LightSpeedProductDraft extends Base {
         final Optional<Price> price = selectPrice(product);
         if (sku.isPresent() && price.isPresent()) {
             final String name = product.getName().get(locale).orElse(sku.get());
-            final String description = product.getDescription().flatMap(d -> d.get(locale)).orElse("");
             final double sellPrice = priceAmount(price.get());
-            return Optional.of(new LightSpeedProductDraft(sku.get(), name, description, sellPrice));
+            return Optional.of(new LightSpeedProductDraft(sku.get(), sku.get(), name, sellPrice));
         } else {
             return Optional.empty();
         }

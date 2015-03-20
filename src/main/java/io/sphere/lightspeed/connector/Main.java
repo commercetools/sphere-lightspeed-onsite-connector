@@ -10,17 +10,23 @@ import io.sphere.sdk.client.SphereClient;
 import io.sphere.sdk.client.SphereClientConfig;
 import io.sphere.sdk.client.SphereClientFactory;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeParseException;
+
 public class Main {
 
     public static void main(String[] args) {
         final Config config = ConfigFactory.load();
         final String storeId = config.getString("store.id");
-        final long intervalInSeconds = config.getLong("sync.interval.orders");
+        final long ordersIntervalInSeconds = config.getLong("sync.interval.orders");
+        final long productsIntervalInSeconds = config.getLong("sync.interval.products");
+        final LocalDateTime syncSince = getSyncSince(config);
         final SphereClient sphereClient = createSphereClient(config);
         final LightSpeedClient lightspeedClient = createLightSpeedClient(config);
 
         final ActorSystem system = ActorSystem.create();
-        system.actorOf(OrderSyncActor.props(sphereClient, lightspeedClient, storeId, intervalInSeconds));
+        system.actorOf(OrderSyncActor.props(sphereClient, lightspeedClient, storeId, ordersIntervalInSeconds));
+        //system.actorOf(ProductSyncActor.props(sphereClient, lightspeedClient, storeId, productsIntervalInSeconds));
     }
 
     private static LightSpeedClient createLightSpeedClient(final Config config) {
@@ -39,5 +45,13 @@ public class Main {
         final String clientSecret = config.getString("sphere.client.secret");
         final SphereClientConfig clientConfig = SphereClientConfig.of(projectKey, clientId, clientSecret);
         return SphereClientFactory.of().createClient(clientConfig);
+    }
+
+    private static LocalDateTime getSyncSince(final Config config) {
+        try {
+            return LocalDateTime.parse(config.getString("sync.since"));
+        } catch (DateTimeParseException e) {
+            return LocalDateTime.now();
+        }
     }
 }

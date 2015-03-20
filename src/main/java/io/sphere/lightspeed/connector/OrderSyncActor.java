@@ -30,11 +30,14 @@ import io.sphere.sdk.queries.StringQuerySortingModel;
 import scala.concurrent.duration.Duration;
 import scala.concurrent.duration.FiniteDuration;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Predicate;
 
+import static java.time.LocalDateTime.now;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
@@ -45,24 +48,25 @@ public class OrderSyncActor extends UntypedActor {
     private final LoggingAdapter log = Logging.getLogger(getContext().system(), this);
     private final SphereClient sphereClient;
     private final LightSpeedClient lightspeedClient;
-    private final CompletableFuture<Channel> channelFuture;
     private final String storeId;
     private final long intervalInSeconds;
-    private long currentIntervalInSeconds;
+    private final LocalDateTime syncSince;
+    private final CompletableFuture<Channel> channelFuture;
 
-    private OrderSyncActor(final SphereClient sphereClient, final LightSpeedClient lightspeedClient,
-                           final CompletableFuture<Channel> channelFuture, final String storeId, final long intervalInSeconds) {
+    private OrderSyncActor(final SphereClient sphereClient, final LightSpeedClient lightspeedClient, final String storeId,
+                           final long intervalInSeconds, final LocalDateTime syncSince, final CompletableFuture<Channel> channelFuture) {
         this.sphereClient = sphereClient;
         this.lightspeedClient = lightspeedClient;
-        this.channelFuture = channelFuture;
         this.storeId = storeId;
         this.intervalInSeconds = intervalInSeconds;
-        this.currentIntervalInSeconds = intervalInSeconds;
+        this.syncSince = syncSince;
+        this.channelFuture = channelFuture;
     }
 
     @Override
     public void preStart() throws Exception {
-        scheduleFor(0);
+        final SyncMessage msg = new SyncMessage(syncSince);
+        self().tell(msg, self());
     }
 
     @Override
@@ -72,8 +76,8 @@ public class OrderSyncActor extends UntypedActor {
 
     @Override
     public void onReceive(final Object message) throws Exception {
-        if (message instanceof SyncOrderMessage) {
-            synchronize();
+        if (message instanceof SyncMessage) {
+            synchronize((SyncMessage) message);
         } else {
             unhandled(message);
         }
@@ -85,34 +89,38 @@ public class OrderSyncActor extends UntypedActor {
      * @return a Props for creating this actor.
      */
     public static Props props(final SphereClient sphereClient, final LightSpeedClient lightspeedClient,
-                              final String storeId, final long intervalInSeconds) {
+                              final String storeId, final long intervalInSeconds, final LocalDateTime syncSince) {
         return Props.create(new Creator<OrderSyncActor>() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public OrderSyncActor create() throws Exception {
                 final CompletableFuture<Channel> channelFuture = fetchChannel(sphereClient, storeId);
-                return new OrderSyncActor(sphereClient, lightspeedClient, channelFuture, storeId, intervalInSeconds);
+                return new OrderSyncActor(sphereClient, lightspeedClient, storeId, intervalInSeconds, syncSince, channelFuture);
             }
         });
     }
 
-    private void synchronize() {
-        log.info("Syncing orders from LightSpeed to SPHERE.IO...");
-        lightspeedClient.execute(InvoiceReferenceQuery.of())
+    private void synchronize(final SyncMessage msg) {
+        log.info("Syncing orders from Lightspeed to SPHERE.IO...");
+        final LocalDateTime lastSync = now().minusSeconds(30); // Safety time margin
+        fetchRecentInvoices(msg)
                 .thenAccept(this::importInvoicesToSphere)
-                .whenComplete((r, t) -> {
-                    if (t != null) {
-                        log.error(t, "An error occurred during order synchronization, increasing current interval...");
-                        currentIntervalInSeconds *= 2;
-                    } else {
-                        currentIntervalInSeconds = intervalInSeconds;
-                    }
-                    scheduleFor(currentIntervalInSeconds);
+                .thenRun(() -> scheduleFor(intervalInSeconds, lastSync))
+                .exceptionally(t -> {
+                    tryAgain(t, msg);
+                    return null;
                 });
     }
 
+    private CompletableFuture<List<InvoiceReference>> fetchRecentInvoices(SyncMessage msg) {
+        final String lastSync = msg.getSyncSince().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+        return lightspeedClient.execute(InvoiceReferenceQuery.of()
+                .withPredicate(String.format("datetime_modified > \"%s\"", lastSync)));
+    }
+
     private void importInvoicesToSphere(final List<InvoiceReference> invoiceRefs) {
+        log.info("New invoices found: " + invoiceRefs.size());
         invoiceRefs.parallelStream()
                 .forEach(ref -> lightspeedClient.execute(InvoiceFetch.of(ref))
                         .thenAccept(this::importInvoiceToSphere));
@@ -166,14 +174,21 @@ public class OrderSyncActor extends UntypedActor {
     }
 
     private CompletableFuture<Order> importOrderDraftToSphere(final OrderImportDraft orderImportDraft) {
-        final CompletableFuture<Order> future = sphereClient.execute(OrderImportCommand.of(orderImportDraft));
-        future.thenRunAsync(() -> log.info("Imported order " + orderImportDraft.getOrderNumber()));
-        return future;
+        return sphereClient.execute(OrderImportCommand.of(orderImportDraft))
+                .thenApply(order -> {
+                    log.info("Imported order " + orderImportDraft.getOrderNumber());
+                    return order;
+                });
     }
 
-    private void scheduleFor(final long intervalInSeconds) {
+    private void tryAgain(final Throwable t, final SyncMessage msg) {
+        log.error(t, "An error occurred during order synchronization, increasing current interval...");
+        scheduleFor(msg.getIncreasedInterval(), msg.getSyncSince());
+    }
+
+    private void scheduleFor(final long intervalInSeconds, final LocalDateTime syncSince) {
         final FiniteDuration delay = Duration.create(intervalInSeconds, SECONDS);
-        final SyncOrderMessage msg = new SyncOrderMessage();
+        final SyncMessage msg = new SyncMessage(Optional.of(intervalInSeconds), syncSince);
         getContext().system().scheduler().scheduleOnce(delay, self(), msg, getContext().dispatcher(), self());
         log.info("Scheduled an order synchronization in " + intervalInSeconds + "s");
     }
@@ -188,10 +203,5 @@ public class OrderSyncActor extends UntypedActor {
                 return sphereClient.execute(ChannelCreateCommand.of(channelDraft));
             }
         });
-    }
-
-    static final class SyncOrderMessage {
-        SyncOrderMessage() {
-        }
     }
 }
