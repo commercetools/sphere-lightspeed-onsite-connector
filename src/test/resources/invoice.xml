@@ -1,0 +1,98 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<invoice uri="https://localhost:9630/api/invoices/6/" id="6" full_render="true">
+    <document_id>2</document_id>
+    <date_created>2015-03-19</date_created>
+    <datetime_created>2015-03-19T01:32:01.748631</datetime_created>
+    <date_modified>2015-03-19</date_modified>
+    <datetime_modified>2015-03-19T01:32:06.310836</datetime_modified>
+    <flags>
+        <drop_shipment>false</drop_shipment>
+        <exported>false</exported>
+        <pay_backorders>false</pay_backorders>
+        <posted>false</posted>
+        <voided>false</voided>
+    </flags>
+    <invoice_id>I-2</invoice_id>
+    <invoice_customer>
+        <customer/>
+        <mainname/><mainphone/>
+        <phone_email/>
+        <contact/>
+        <contact_info></contact_info>
+        <discount>0.000</discount>
+        <pricing_level>0</pricing_level>
+        <terms_tax/>
+        <zip/>
+        <po>None</po>
+    </invoice_customer>
+    <source/>
+    <margin>100.000</margin>
+    <print_options>
+        <language>English</language>
+        <images></images>
+        <discounts>false</discounts>
+    </print_options>
+    <primary_user>
+        <user uri="https://localhost:9630/api/users/1001/" id="1001"/>
+    </primary_user>
+    <secondary_user>
+        <user/>
+    </secondary_user>
+    <printed_notes/>
+    <internal_notes/>
+    <shipping_method>None</shipping_method>
+    <currency uri="https://localhost:9630/api/currencies/1/" id="1" full_render="true">
+        <name>USD</name>
+        <rate>1.000000</rate>
+        <symbol>$</symbol>
+    </currency>
+    <terms/>
+    <returned_invoice/>
+    <cc_info/>
+    <due>2015-03-19</due>
+    <exported/>
+    <posted/>
+    <import_id/>
+    <invoice_status>Paid</invoice_status>
+    <totals>
+        <subtotal>50.00</subtotal>
+        <tax>0.00</tax>
+        <total>50.00</total>
+        <owing>0.00</owing>
+        <paid>50.00</paid>
+    </totals>
+    <tax_code uri="https://localhost:9630/api/tax_codes/1/" id="1"/>
+    <taxes inclusive="false">
+        <tax_exempt>
+            <tax rate="0.00" total="0.00" id="1">false</tax>
+            <tax rate="0.00" total="0.00" id="2">false</tax>
+            <tax rate="0.00" total="0.00" id="3">false</tax>
+            <tax rate="0.00" total="0.00" id="4">false</tax>
+            <tax rate="0.00" total="0.00" id="5">false</tax>
+        </tax_exempt>
+    </taxes>
+    <station>Lauras MacBook</station>
+    <pricing_level/>
+    <c_discount_percentage>0.000</c_discount_percentage>
+    <payments>
+        <payment uri="https://localhost:9630/api/invoices/6/payments/5/" id="5"/>
+    </payments>
+    <lineitems>
+        <lineitem uri="https://localhost:9630/api/invoices/6/lineitems/23/" id="23" full_render="false">
+            <quantity>5.000</quantity>
+            <sell_price>10.000</sell_price>
+            <sells>
+                <sell>10.000</sell>
+                <base>10.000</base>
+                <total>50.00</total>
+            </sells>
+            <lineitem_product>
+                <product uri="https://localhost:9630/api/products/2/" id="2"/>
+                <code>15</code>
+                <description>Lightning Bird Plush Toy</description>
+            </lineitem_product>
+        </lineitem>
+    </lineitems>
+    <billing/>
+    <shipping/>
+</invoice>

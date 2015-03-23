@@ -1,9 +1,10 @@
 package io.sphere.lightspeed.models;
 
+import io.sphere.sdk.models.Base;
 import io.sphere.sdk.orders.ProductVariantImportDraft;
 import io.sphere.sdk.orders.ProductVariantImportDraftBuilder;
 
-public class InvoiceLineItemProduct {
+public class InvoiceLineItemProduct extends Base {
     private String uri;
     private String id;
     private String code;
@@ -30,15 +31,5 @@ public class InvoiceLineItemProduct {
 
     public ProductVariantImportDraft toProductVariantImportDraft() {
         return ProductVariantImportDraftBuilder.ofSku(code).build();
-    }
-
-    @Override
-    public String toString() {
-        return "InvoiceLineItemProduct{" +
-                "uri='" + uri + '\'' +
-                ", id='" + id + '\'' +
-                ", code='" + code + '\'' +
-                ", description='" + description + '\'' +
-                '}';
     }
 }

@@ -1,8 +1,10 @@
 package io.sphere.lightspeed.models;
 
+import io.sphere.sdk.models.Base;
+
 import java.math.BigDecimal;
 
-public class InvoiceTotals {
+public class InvoiceTotals extends Base {
     private BigDecimal subtotal;
     private BigDecimal tax;
     private BigDecimal total;
@@ -30,16 +32,5 @@ public class InvoiceTotals {
 
     public BigDecimal getPaid() {
         return paid;
-    }
-
-    @Override
-    public String toString() {
-        return "InvoiceTotals{" +
-                "subtotal=" + subtotal +
-                ", tax=" + tax +
-                ", total=" + total +
-                ", owing=" + owing +
-                ", paid=" + paid +
-                '}';
     }
 }
