@@ -1,14 +1,14 @@
 package io.sphere.lightspeed.commands;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import io.sphere.lightspeed.client.HttpRequestIntent;
+import io.sphere.lightspeed.client.HttpResponse;
 import io.sphere.lightspeed.client.LightSpeedRequestBase;
 import io.sphere.sdk.annotations.Internal;
-import io.sphere.sdk.client.HttpRequestIntent;
-import io.sphere.sdk.client.JsonEndpoint;
-import io.sphere.sdk.http.HttpResponse;
 
 import java.util.function.Function;
 
-import static io.sphere.sdk.http.HttpMethod.*;
+import static io.sphere.lightspeed.client.HttpMethod.DELETE;
 
 /**
  * Base class to implement commands which delete an entity in LIGHTSPEED.
@@ -18,25 +18,26 @@ import static io.sphere.sdk.http.HttpMethod.*;
 
 @Internal
 public abstract class DeleteCommandImpl<T> extends LightSpeedRequestBase implements DeleteCommand<T> {
-    private final String id;
-    private final JsonEndpoint<T> endpoint;
+    private final String resourceUrl;
+    private final Function<HttpResponse, T> resultMapper;
 
-    protected DeleteCommandImpl(final String id, final JsonEndpoint<T> endpoint) {
-        this.id = id;
-        this.endpoint = endpoint;
+    protected DeleteCommandImpl(final String resourceUrl, final TypeReference<T> resultTypeReference) {
+        this.resourceUrl = resourceUrl;
+        this.resultMapper = LightSpeedRequestBase.resultMapperOf(resultTypeReference);
     }
 
     @Override
     public HttpRequestIntent httpRequestIntent() {
-        final String baseEndpointWithoutId = endpoint.endpoint();
-        if (!baseEndpointWithoutId.startsWith("/")) {
-            throw new RuntimeException("By convention the paths start with a slash, see baseEndpointWithoutId()");
-        }
-        return HttpRequestIntent.of(DELETE, baseEndpointWithoutId + id);
+        return HttpRequestIntent.of(DELETE, "");
+    }
+
+    @Override
+    public String resourceUrl() {
+        return resourceUrl;
     }
 
     @Override
     public Function<HttpResponse, T> resultMapper() {
-        return resultMapperOf(endpoint.typeReference());
+        return resultMapper;
     }
 }

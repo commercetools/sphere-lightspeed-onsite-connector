@@ -1,8 +1,5 @@
 package io.sphere.lightspeed.client;
 
-import io.sphere.sdk.client.HttpRequestIntent;
-import io.sphere.sdk.http.HttpResponse;
-
 import java.util.function.Function;
 
 interface LightSpeedRequest<T> {

@@ -129,7 +129,12 @@ public final class OrderSyncActor extends SyncActor {
         log.info("Recent invoices found: " + invoiceRefs.size());
         invoiceRefs.parallelStream()
                 .forEach(ref -> lightspeedClient.execute(InvoiceFetch.of(ref))
-                        .thenAccept(this::importInvoiceToSphere));
+                        .thenAccept(this::importInvoiceToSphere)
+                        .exceptionally(t -> {
+                            log.error("Could not fetch invoice " + ref.getUri());
+                            return null;
+                        })
+                );
     }
 
     private void importInvoiceToSphere(final Invoice invoice) {
@@ -158,7 +163,11 @@ public final class OrderSyncActor extends SyncActor {
             if (!order.getSyncInfo().stream().anyMatch(isImportOrderChannel)) {
                 final UpdateSyncInfo action = UpdateSyncInfo.of(channel).withExternalId(invoice.getDocumentId());
                 sphereClient.execute(OrderUpdateCommand.of(order, action))
-                        .thenRun(() -> log.info("Order sync info set in order " + order.getOrderNumber()));
+                        .thenRun(() -> log.info("Order sync info set in order " + order.getOrderNumber()))
+                        .exceptionally(t -> {
+                            log.error(t, "Could not update sync info of order " + invoice.getOrderNumber(storeId));
+                            return null;
+                        });
             }
         });
     }
@@ -169,7 +178,11 @@ public final class OrderSyncActor extends SyncActor {
         if (!hasSameState) {
             final ChangePaymentState action = ChangePaymentState.of(invoice.getPaymentState());
             sphereClient.execute(OrderUpdateCommand.of(order, action))
-                    .thenRun(() -> log.info("Order payment state updated in order " + order.getOrderNumber()));
+                    .thenRun(() -> log.info("Order payment state updated in order " + order.getOrderNumber()))
+                    .exceptionally(t -> {
+                        log.error(t, "Could not update payment state of order " + invoice.getOrderNumber(storeId));
+                        return null;
+                    });
         }
     }
 

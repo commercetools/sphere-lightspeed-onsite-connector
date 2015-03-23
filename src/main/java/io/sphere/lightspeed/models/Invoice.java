@@ -15,7 +15,7 @@ import java.util.List;
 import static java.time.ZoneOffset.UTC;
 import static java.util.stream.Collectors.toList;
 
-public class Invoice extends Base {
+public class Invoice extends Base implements Referenceable<Invoice> {
     private String uri;
     private String id;
     @JacksonXmlProperty(localName = "document_id")
@@ -87,6 +87,7 @@ public class Invoice extends Base {
     public Invoice() {
     }
 
+    @Override
     public String getUri() {
         return uri;
     }

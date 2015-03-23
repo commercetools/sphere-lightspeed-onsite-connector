@@ -9,7 +9,7 @@ import java.util.Optional;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 public class SyncMessage {
-    private static final long MIN_SEC_RETRY_INTERVAL = 60 * 2 + 30;
+    private static final long MIN_SEC_RETRY_INTERVAL = 60 * 3;
     private final Optional<FiniteDuration> appliedDelay;
     private final Optional<LocalDateTime> syncSince;
 

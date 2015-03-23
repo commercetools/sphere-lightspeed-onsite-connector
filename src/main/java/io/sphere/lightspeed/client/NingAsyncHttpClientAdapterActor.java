@@ -5,14 +5,14 @@ import akka.actor.UntypedActor;
 import akka.japi.Creator;
 import com.ning.http.client.*;
 import com.ning.http.client.cookie.Cookie;
+import com.ning.http.client.generators.InputStreamBodyGenerator;
 import io.sphere.sdk.http.HttpException;
-import io.sphere.sdk.http.HttpRequest;
-import io.sphere.sdk.http.HttpResponse;
 import io.sphere.sdk.http.StringHttpRequestBody;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 import java.util.List;
@@ -124,6 +124,9 @@ class NingAsyncHttpClientAdapterActor extends UntypedActor {
             if (body instanceof StringHttpRequestBody) {
                 final String bodyAsString = ((StringHttpRequestBody) body).getString();
                 builder.setBodyEncoding(StandardCharsets.UTF_8.name()).setBody(bodyAsString);
+            } else if (body instanceof InputStreamHttpRequestBody) {
+                final InputStream inputStream = ((InputStreamHttpRequestBody) body).getInputStream();
+                builder.setBody(new InputStreamBodyGenerator(inputStream));
             }
         });
         return builder.build();

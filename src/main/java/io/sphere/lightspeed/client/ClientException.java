@@ -1,7 +1,5 @@
 package io.sphere.lightspeed.client;
 
-import io.sphere.sdk.http.HttpResponse;
-
 public class ClientException extends RuntimeException {
     private static final long serialVersionUID = 1L;
 
