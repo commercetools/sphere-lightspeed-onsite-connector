@@ -1,8 +1,9 @@
 package io.sphere.lightspeed.models;
 
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import io.sphere.sdk.models.Base;
 
-public class InvoiceFlags {
+public class InvoiceFlags extends Base {
     @JacksonXmlProperty(localName = "drop_shipment")
     private boolean dropShipment;
     private boolean exported;
@@ -32,16 +33,5 @@ public class InvoiceFlags {
 
     public boolean isVoided() {
         return voided;
-    }
-
-    @Override
-    public String toString() {
-        return "InvoiceFlags{" +
-                "voided=" + voided +
-                ", posted=" + posted +
-                ", payBackOrders=" + payBackOrders +
-                ", exported=" + exported +
-                ", dropShipment=" + dropShipment +
-                '}';
     }
 }

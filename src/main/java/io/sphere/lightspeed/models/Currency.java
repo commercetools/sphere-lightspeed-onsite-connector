@@ -1,12 +1,13 @@
 package io.sphere.lightspeed.models;
 
+import io.sphere.sdk.models.Base;
 import org.javamoney.moneta.CurrencyUnitBuilder;
 
 import javax.money.CurrencyContext;
 import javax.money.CurrencyUnit;
 import java.math.BigDecimal;
 
-public class Currency {
+public class Currency extends Base {
     private String uri;
     private String id;
     private String name;
@@ -38,16 +39,5 @@ public class Currency {
 
     public CurrencyUnit getCurrencyUnit() {
         return CurrencyUnitBuilder.of(name, CurrencyContext.KEY_PROVIDER).build();
-    }
-
-    @Override
-    public String toString() {
-        return "Currency{" +
-                "uri='" + uri + '\'' +
-                ", id='" + id + '\'' +
-                ", name='" + name + '\'' +
-                ", rate=" + rate +
-                ", symbol='" + symbol + '\'' +
-                '}';
     }
 }

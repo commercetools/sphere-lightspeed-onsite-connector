@@ -2,6 +2,7 @@ package io.sphere.lightspeed.models;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import io.sphere.sdk.models.Base;
 import io.sphere.sdk.orders.*;
 import org.javamoney.moneta.Money;
 
@@ -14,7 +15,7 @@ import java.util.List;
 import static java.time.ZoneOffset.UTC;
 import static java.util.stream.Collectors.toList;
 
-public class Invoice {
+public class Invoice extends Base {
     private String uri;
     private String id;
     @JacksonXmlProperty(localName = "document_id")
@@ -217,38 +218,6 @@ public class Invoice {
                 .completedAt(getDatetimeCreated().toInstant(UTC))
                 .paymentState(getPaymentState())
                 .build();
-    }
-
-    @Override
-    public String toString() {
-        return "Invoice{" +
-                "uri='" + uri + '\'' +
-                ", id='" + id + '\'' +
-                ", documentId='" + documentId + '\'' +
-                ", dateCreated=" + dateCreated +
-                ", datetimeCreated=" + datetimeCreated +
-                ", dateModified=" + dateModified +
-                ", datetimeModified=" + datetimeModified +
-                ", flags=" + flags +
-                ", invoiceCustomer=" + invoiceCustomer +
-                ", margin=" + margin +
-                ", printedNotes='" + printedNotes + '\'' +
-                ", internalNotes='" + internalNotes + '\'' +
-                ", shippingMethod='" + shippingMethod + '\'' +
-                ", currency=" + currency +
-                ", ccInfo='" + ccInfo + '\'' +
-                ", due=" + due +
-                ", exported=" + exported +
-                ", posted=" + posted +
-                ", importId='" + importId + '\'' +
-                ", invoiceId='" + invoiceId + '\'' +
-                ", invoiceStatus='" + invoiceStatus + '\'' +
-                ", totals=" + totals +
-                ", taxes=" + taxes +
-                ", station='" + station + '\'' +
-                ", cDiscountPercentage=" + cDiscountPercentage +
-                ", lineItems=" + lineItems +
-                '}';
     }
 
     public static TypeReference<Invoice> typeReference() {

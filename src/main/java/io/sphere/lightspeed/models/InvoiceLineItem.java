@@ -1,6 +1,7 @@
 package io.sphere.lightspeed.models;
 
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import io.sphere.sdk.models.Base;
 import io.sphere.sdk.models.LocalizedStrings;
 import io.sphere.sdk.orders.LineItemImportDraft;
 import io.sphere.sdk.orders.LineItemImportDraftBuilder;
@@ -11,7 +12,7 @@ import org.javamoney.moneta.Money;
 
 import java.math.BigDecimal;
 
-public class InvoiceLineItem {
+public class InvoiceLineItem extends Base {
     private String uri;
     private String id;
 
@@ -52,16 +53,5 @@ public class InvoiceLineItem {
         final LocalizedStrings name = LocalizedStrings.ofEnglishLocale(lineItemProduct.getDescription());
         final Price price = PriceBuilder.of(Money.of(sellPrice, currency.getCurrencyUnit())).build();
         return LineItemImportDraftBuilder.of(variantImportDraft, quantity.longValue(), price, name).build();
-    }
-
-    @Override
-    public String toString() {
-        return "InvoiceLineItem{" +
-                "lineItemProduct=" + lineItemProduct +
-                ", sellPrice=" + sellPrice +
-                ", quantity=" + quantity +
-                ", id='" + id + '\'' +
-                ", uri='" + uri + '\'' +
-                '}';
     }
 }

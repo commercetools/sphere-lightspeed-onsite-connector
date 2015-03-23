@@ -1,8 +1,9 @@
 package io.sphere.lightspeed.models;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import io.sphere.sdk.models.Base;
 
-public class InvoiceReference {
+public class InvoiceReference extends Base {
     private String id;
     private String uri;
 

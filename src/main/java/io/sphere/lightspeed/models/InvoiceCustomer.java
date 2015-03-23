@@ -1,10 +1,11 @@
 package io.sphere.lightspeed.models;
 
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import io.sphere.sdk.models.Base;
 
 import java.math.BigDecimal;
 
-public class InvoiceCustomer {
+public class InvoiceCustomer extends Base {
     private String uri;
     private String id;
 
@@ -76,23 +77,5 @@ public class InvoiceCustomer {
 
     public String getPo() {
         return po;
-    }
-
-    @Override
-    public String toString() {
-        return "InvoiceCustomer{" +
-                "uri='" + uri + '\'' +
-                ", id='" + id + '\'' +
-                ", mainName='" + mainName + '\'' +
-                ", mainPhone='" + mainPhone + '\'' +
-                ", phoneEmail='" + phoneEmail + '\'' +
-                ", contact='" + contact + '\'' +
-                ", contactInfo='" + contactInfo + '\'' +
-                ", discount=" + discount +
-                ", pricingLevel=" + pricingLevel +
-                ", termsTax='" + termsTax + '\'' +
-                ", zip='" + zip + '\'' +
-                ", po='" + po + '\'' +
-                '}';
     }
 }

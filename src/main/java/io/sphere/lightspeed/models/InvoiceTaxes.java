@@ -1,6 +1,8 @@
 package io.sphere.lightspeed.models;
 
-public class InvoiceTaxes {
+import io.sphere.sdk.models.Base;
+
+public class InvoiceTaxes extends Base {
     private boolean inclusive;
     // Missing Tax Exempt info
 
@@ -9,12 +11,5 @@ public class InvoiceTaxes {
 
     public boolean isInclusive() {
         return inclusive;
-    }
-
-    @Override
-    public String toString() {
-        return "InvoiceTaxes{" +
-                "inclusive=" + inclusive +
-                '}';
     }
 }
