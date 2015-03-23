@@ -1,17 +1,18 @@
 package io.sphere.lightspeed.queries;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import io.sphere.lightspeed.client.HttpRequestIntent;
+import io.sphere.lightspeed.client.HttpResponse;
 import io.sphere.lightspeed.client.LightSpeedRequestBase;
-import io.sphere.sdk.client.HttpRequestIntent;
 import io.sphere.sdk.client.JsonEndpoint;
-import io.sphere.sdk.http.HttpMethod;
-import io.sphere.sdk.http.HttpResponse;
 import io.sphere.sdk.http.UrlQueryBuilder;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
+
+import static io.sphere.lightspeed.client.HttpMethod.*;
 
 class QueryDslImpl<T> extends LightSpeedRequestBase implements QueryDsl<T> {
     private final JsonEndpoint<T> endpoint;
@@ -45,7 +46,7 @@ class QueryDslImpl<T> extends LightSpeedRequestBase implements QueryDsl<T> {
     @Override
     public final HttpRequestIntent httpRequestIntent() {
         final String additions = queryParametersToString(true);
-        return HttpRequestIntent.of(HttpMethod.GET, endpoint.endpoint() + (additions.length() > 1 ? additions : ""));
+        return HttpRequestIntent.of(GET, endpoint.endpoint() + (additions.length() > 1 ? additions : ""));
     }
 
     @Override

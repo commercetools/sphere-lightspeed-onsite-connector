@@ -3,7 +3,7 @@ package io.sphere.lightspeed.models;
 import com.fasterxml.jackson.core.type.TypeReference;
 import io.sphere.sdk.models.Base;
 
-public class ProductReference extends Base {
+public class ProductReference extends Base implements Referenceable<LightSpeedProduct> {
     private String id;
     private String uri;
     private String code;
@@ -19,6 +19,7 @@ public class ProductReference extends Base {
         return code;
     }
 
+    @Override
     public String getUri() {
         return uri;
     }

@@ -1,7 +1,7 @@
 package io.sphere.lightspeed.queries;
 
+import io.sphere.lightspeed.client.HttpResponse;
 import io.sphere.lightspeed.client.ResourceRequest;
-import io.sphere.sdk.http.HttpResponse;
 
 import java.util.function.Function;
 

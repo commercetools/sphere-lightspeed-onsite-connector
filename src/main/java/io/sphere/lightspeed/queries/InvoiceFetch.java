@@ -2,7 +2,7 @@ package io.sphere.lightspeed.queries;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import io.sphere.lightspeed.models.Invoice;
-import io.sphere.lightspeed.models.InvoiceReference;
+import io.sphere.lightspeed.models.Referenceable;
 
 public class InvoiceFetch extends BaseModelFetch<Invoice> {
 
@@ -19,7 +19,7 @@ public class InvoiceFetch extends BaseModelFetch<Invoice> {
         };
     }
 
-    public static InvoiceFetch of(final InvoiceReference invoiceRef) {
+    public static InvoiceFetch of(final Referenceable<Invoice> invoiceRef) {
         return new InvoiceFetch(invoiceRef.getUri());
     }
 }

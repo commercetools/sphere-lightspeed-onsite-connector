@@ -1,15 +1,15 @@
 package io.sphere.lightspeed.commands;
 
+import io.sphere.lightspeed.client.HttpRequestIntent;
+import io.sphere.lightspeed.client.HttpResponse;
 import io.sphere.lightspeed.client.LightSpeedRequestBase;
 import io.sphere.sdk.annotations.Internal;
-import io.sphere.sdk.client.HttpRequestIntent;
 import io.sphere.sdk.client.JsonEndpoint;
-import io.sphere.sdk.http.HttpResponse;
 
 import java.util.function.Function;
 
+import static io.sphere.lightspeed.client.HttpMethod.POST;
 import static io.sphere.lightspeed.utils.XmlUtils.toXml;
-import static io.sphere.sdk.http.HttpMethod.POST;
 
 /**
  * Base class to implement commands which create an entity in LIGHTSPEED.

@@ -4,8 +4,6 @@ import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import com.ning.http.client.*;
 import com.ning.http.client.cookie.Cookie;
-import io.sphere.sdk.http.HttpRequest;
-import io.sphere.sdk.http.HttpResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

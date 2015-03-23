@@ -3,27 +3,26 @@ package io.sphere.lightspeed.models;
 import com.fasterxml.jackson.core.type.TypeReference;
 import io.sphere.sdk.models.Base;
 
-public class InvoiceReference extends Base implements Referenceable<Invoice> {
+public class ProductPhoto extends Base {
     private String id;
     private String uri;
 
-    public InvoiceReference() {
+    private ProductPhoto() {
     }
 
     public String getId() {
         return id;
     }
 
-    @Override
     public String getUri() {
         return uri;
     }
 
-    public static TypeReference<InvoiceReference> typeReference() {
-        return new TypeReference<InvoiceReference>() {
+    public static TypeReference<ProductPhoto> typeReference(){
+        return new TypeReference<ProductPhoto>() {
             @Override
             public String toString() {
-                return "TypeReference<InvoiceReference>";
+                return "TypeReference<ProductPhoto>";
             }
         };
     }

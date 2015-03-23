@@ -1,7 +1,5 @@
 package io.sphere.lightspeed.client;
 
-import io.sphere.sdk.client.HttpRequestIntent;
-import io.sphere.sdk.http.*;
 import io.sphere.sdk.models.Base;
 
 import java.util.concurrent.CompletableFuture;

@@ -1,7 +1,6 @@
 package io.sphere.lightspeed.client;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import io.sphere.sdk.http.HttpResponse;
 import io.sphere.sdk.models.Base;
 
 import java.nio.charset.StandardCharsets;

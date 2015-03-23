@@ -5,25 +5,30 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import io.sphere.sdk.models.Base;
 
+import java.util.List;
+
 @JacksonXmlRootElement(localName = "product")
-public class LightSpeedProduct extends Base {
+public class LightSpeedProduct extends Base implements Referenceable<LightSpeedProduct> {
     private String id;
+    private String uri;
     private String code;
 
     @JacksonXmlProperty(localName = "sell_price")
     private double sellPrice;
 
-    private LightSpeedProduct() {
-    }
+    @JacksonXmlProperty(localName = "product_photos")
+    private List<ProductPhoto> productPhotos;
 
-    LightSpeedProduct(final String id, final String code, final double sellPrice) {
-        this.id = id;
-        this.code = code;
-        this.sellPrice = sellPrice;
+    private LightSpeedProduct() {
     }
 
     public String getId() {
         return id;
+    }
+
+    @Override
+    public String getUri() {
+        return uri;
     }
 
     public String getCode() {
@@ -32,6 +37,14 @@ public class LightSpeedProduct extends Base {
 
     public double getSellPrice() {
         return sellPrice;
+    }
+
+    public List<ProductPhoto> getProductPhotos() {
+        return productPhotos;
+    }
+
+    public boolean hasPhotos() {
+        return !productPhotos.isEmpty();
     }
 
     public static TypeReference<LightSpeedProduct> typeReference(){
