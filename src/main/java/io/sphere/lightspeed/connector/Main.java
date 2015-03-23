@@ -2,6 +2,7 @@ package io.sphere.lightspeed.connector;
 
 import akka.actor.ActorSystem;
 import com.typesafe.config.Config;
+import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigFactory;
 import io.sphere.lightspeed.client.LightSpeedClient;
 import io.sphere.lightspeed.client.LightSpeedClientFactory;
@@ -12,6 +13,7 @@ import io.sphere.sdk.client.SphereClientFactory;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
+import java.util.Optional;
 
 public class Main {
 
@@ -20,13 +22,13 @@ public class Main {
         final String storeId = config.getString("store.id");
         final long ordersIntervalInSeconds = config.getLong("sync.interval.orders");
         final long productsIntervalInSeconds = config.getLong("sync.interval.products");
-        final LocalDateTime syncSince = getSyncSince(config);
+        final Optional<LocalDateTime> syncSince = getSyncSince(config);
         final SphereClient sphereClient = createSphereClient(config);
         final LightSpeedClient lightspeedClient = createLightSpeedClient(config);
 
         final ActorSystem system = ActorSystem.create();
-        system.actorOf(OrderSyncActor.props(sphereClient, lightspeedClient, storeId, ordersIntervalInSeconds));
-        //system.actorOf(ProductSyncActor.props(sphereClient, lightspeedClient, storeId, productsIntervalInSeconds));
+        system.actorOf(OrderSyncActor.props(sphereClient, lightspeedClient, storeId, ordersIntervalInSeconds, syncSince));
+        system.actorOf(ProductSyncActor.props(sphereClient, lightspeedClient, storeId, productsIntervalInSeconds, syncSince));
     }
 
     private static LightSpeedClient createLightSpeedClient(final Config config) {
@@ -47,11 +49,12 @@ public class Main {
         return SphereClientFactory.of().createClient(clientConfig);
     }
 
-    private static LocalDateTime getSyncSince(final Config config) {
+    private static Optional<LocalDateTime> getSyncSince(final Config config) {
         try {
-            return LocalDateTime.parse(config.getString("sync.since"));
-        } catch (DateTimeParseException e) {
-            return LocalDateTime.now();
+            final String timestamp = config.getString("sync.since");
+            return Optional.of(LocalDateTime.parse(timestamp));
+        } catch (ConfigException.Missing | DateTimeParseException e) {
+            return Optional.empty();
         }
     }
 }
