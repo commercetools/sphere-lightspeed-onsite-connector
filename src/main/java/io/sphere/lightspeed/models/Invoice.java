@@ -2,17 +2,21 @@ package io.sphere.lightspeed.models;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import io.sphere.sdk.carts.TaxPortion;
+import io.sphere.sdk.carts.TaxedPrice;
 import io.sphere.sdk.models.Base;
 import io.sphere.sdk.orders.*;
 import org.javamoney.moneta.Money;
 
-import javax.money.MonetaryAmount;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
+import static java.math.BigDecimal.ROUND_HALF_EVEN;
 import static java.time.ZoneOffset.UTC;
+import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 
 public class Invoice extends Base implements Referenceable<Invoice> {
@@ -207,17 +211,34 @@ public class Invoice extends Base implements Referenceable<Invoice> {
         return paymentState;
     }
 
+    public TaxedPrice getTaxedPrice() {
+        final Money totalNet = Money.of(totals.getSubtotal(), currency.getCurrencyUnit());
+        final Money totalGross = Money.of(totals.getTotal(), currency.getCurrencyUnit());
+        final Money taxAmount = Money.of(totals.getTax(), currency.getCurrencyUnit());
+        return TaxedPrice.of(totalNet, totalGross, getTaxPortions(taxAmount));
+    }
+
+    private ArrayList<TaxPortion> getTaxPortions(final Money taxAmount) {
+        final ArrayList<TaxPortion> taxPortions = new ArrayList<>();
+        final BigDecimal taxRate = totals.getTax().divide(totals.getSubtotal(), ROUND_HALF_EVEN);
+        if (taxRate.doubleValue() > 0) {
+            taxPortions.add(TaxPortion.of(taxRate.doubleValue(), taxAmount));
+        }
+        return taxPortions;
+    }
+
     public String getOrderNumber(final String storeId) {
         return String.format("%s-%s", storeId, id);
     }
 
     public OrderImportDraft toOrderImportDraft(final String orderNumber) {
-        final MonetaryAmount totalPrice = Money.of(totals.getTotal(), currency.getCurrencyUnit());
+        final Money totalPrice = Money.of(totals.getTotal(), currency.getCurrencyUnit());
         return OrderImportDraftBuilder
                 .ofLineItems(totalPrice, OrderState.COMPLETE, getLineItemImportDrafts())
                 .orderNumber(orderNumber)
                 .completedAt(getDatetimeCreated().toInstant(UTC))
                 .paymentState(getPaymentState())
+                .taxedPrice(getTaxedPrice())
                 .build();
     }
 
