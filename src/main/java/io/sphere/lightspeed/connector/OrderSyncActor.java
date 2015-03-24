@@ -146,6 +146,7 @@ public final class OrderSyncActor extends SyncActor {
         fetchOrderFromSphere(orderNumber)
                 .thenCompose(order -> {
                     if (order.isPresent()) {
+                        log.info("Discarding existing order " + orderNumber);
                         return CompletableFuture.completedFuture(order.get());
                     } else {
                         return importOrderToSphere(invoice, orderNumber);
@@ -164,12 +165,14 @@ public final class OrderSyncActor extends SyncActor {
     private void updateSyncInfo(final Invoice invoice, final Order order) {
         channelFuture.thenAccept(channel -> {
             final Predicate<SyncInfo> isImportOrderChannel = syncInfo -> syncInfo.getChannel().referencesSameResource(channel);
-            if (!order.getSyncInfo().stream().anyMatch(isImportOrderChannel)) {
+            if (order.getSyncInfo().stream().anyMatch(isImportOrderChannel)) {
+                log.info("Sync info already set for order " + order.getOrderNumber());
+            } else {
                 final UpdateSyncInfo action = UpdateSyncInfo.of(channel).withExternalId(invoice.getDocumentId());
                 sphereClient.execute(OrderUpdateCommand.of(order, action))
                         .thenRun(() -> log.info("Order sync info set in order " + order.getOrderNumber()))
                         .exceptionally(t -> {
-                            log.error(t, "Could not update sync info of order " + invoice.getOrderNumber(storeId));
+                            log.error(t, "Could not update sync info of order " + order.getOrderNumber());
                             return null;
                         });
             }
@@ -179,7 +182,9 @@ public final class OrderSyncActor extends SyncActor {
     private void updatePaymentState(final Invoice invoice, final Order order) {
         final Optional<PaymentState> state = order.getPaymentState();
         final boolean hasSameState = state.isPresent() && state.get().equals(invoice.getPaymentState());
-        if (!hasSameState) {
+        if (hasSameState) {
+            log.info("Payment state already up to date for order " + order.getOrderNumber());
+        } else {
             final ChangePaymentState action = ChangePaymentState.of(invoice.getPaymentState());
             sphereClient.execute(OrderUpdateCommand.of(order, action))
                     .thenRun(() -> log.info("Order payment state updated in order " + order.getOrderNumber()))

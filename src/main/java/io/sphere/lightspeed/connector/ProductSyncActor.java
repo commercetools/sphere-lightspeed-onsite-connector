@@ -139,6 +139,7 @@ public final class ProductSyncActor extends SyncActor {
         fetchProductFromLightSpeed(sku)
                 .thenCompose(product -> {
                     if (product.isPresent()) {
+                        log.info("Discarding existing product " + sku);
                         return lightspeedClient.execute(ProductFetch.of(product.get()));
                     } else {
                         return importProductDraftToLightspeed(draft);
