@@ -43,8 +43,8 @@ public class LightSpeedProduct extends Base implements Referenceable<LightSpeedP
         return productPhotos;
     }
 
-    public boolean hasPhotos() {
-        return !productPhotos.isEmpty();
+    public boolean hasNoPhotos() {
+        return productPhotos == null || productPhotos.isEmpty();
     }
 
     public static TypeReference<LightSpeedProduct> typeReference(){

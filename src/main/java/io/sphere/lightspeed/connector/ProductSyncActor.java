@@ -145,7 +145,7 @@ public final class ProductSyncActor extends SyncActor {
                     }
                 })
                 .thenAccept(product -> {
-                    if (!product.hasPhotos()) {
+                    if (product.hasNoPhotos()) {
                         exportProductPhoto(product, images);
                     }
                 })
