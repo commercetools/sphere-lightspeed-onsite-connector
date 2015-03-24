@@ -29,6 +29,15 @@ public class Main {
         final ActorSystem system = ActorSystem.create();
         system.actorOf(OrderSyncActor.props(sphereClient, lightspeedClient, storeId, ordersIntervalInSeconds, syncSince));
         system.actorOf(ProductSyncActor.props(sphereClient, lightspeedClient, storeId, productsIntervalInSeconds, syncSince));
+
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            @Override
+            public void run() {
+                system.shutdown();
+                sphereClient.close();
+                lightspeedClient.close();
+            }
+        });
     }
 
     private static LightSpeedClient createLightSpeedClient(final Config config) {
