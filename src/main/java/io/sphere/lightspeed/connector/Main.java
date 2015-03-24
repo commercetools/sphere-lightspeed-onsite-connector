@@ -22,6 +22,8 @@ public class Main {
         final String storeId = config.getString("store.id");
         final long ordersIntervalInSeconds = config.getLong("sync.interval.orders");
         final long productsIntervalInSeconds = config.getLong("sync.interval.products");
+        final long customersIntervalInSeconds = config.getLong("sync.interval.customers");
+
         final Optional<LocalDateTime> syncSince = getSyncSince(config);
         final SphereClient sphereClient = createSphereClient(config);
         final LightSpeedClient lightspeedClient = createLightSpeedClient(config);
@@ -29,6 +31,7 @@ public class Main {
         final ActorSystem system = ActorSystem.create();
         system.actorOf(OrderSyncActor.props(sphereClient, lightspeedClient, storeId, ordersIntervalInSeconds, syncSince));
         system.actorOf(ProductSyncActor.props(sphereClient, lightspeedClient, storeId, productsIntervalInSeconds, syncSince));
+        system.actorOf(CustomerSyncActor.props(sphereClient, lightspeedClient, storeId, customersIntervalInSeconds, syncSince));
 
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override

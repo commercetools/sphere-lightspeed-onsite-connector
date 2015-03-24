@@ -2,7 +2,7 @@ package io.sphere.lightspeed.queries;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import io.sphere.lightspeed.models.LightSpeedProduct;
-import io.sphere.lightspeed.models.ProductReference;
+import io.sphere.lightspeed.models.Referenceable;
 
 public class ProductFetch extends BaseModelFetch<LightSpeedProduct> {
 
@@ -19,7 +19,7 @@ public class ProductFetch extends BaseModelFetch<LightSpeedProduct> {
         };
     }
 
-    public static ProductFetch of(final ProductReference productRef) {
+    public static ProductFetch of(final Referenceable<LightSpeedProduct> productRef) {
         return new ProductFetch(productRef.getUri());
     }
 }
