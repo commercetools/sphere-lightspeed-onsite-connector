@@ -129,7 +129,7 @@ public final class CustomerSyncActor extends SyncActor {
         fetchCustomerFromLightSpeed(email)
                 .thenCompose(customer -> {
                     if (customer.isPresent()) {
-                        log.debug("Discarding existing customer " + email);
+                        log.info("Discarding existing customer " + email);
                         return lightspeedClient.execute(CustomerFetch.of(customer.get()));
                     } else {
                         return importCustomerDraftToLightspeed(draft);
