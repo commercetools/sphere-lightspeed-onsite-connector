@@ -7,6 +7,7 @@ import akka.japi.Creator;
 import io.sphere.lightspeed.client.LightSpeedClient;
 import io.sphere.lightspeed.models.Invoice;
 import io.sphere.lightspeed.models.InvoiceReference;
+import io.sphere.lightspeed.queries.CustomerFetch;
 import io.sphere.lightspeed.queries.InvoiceFetch;
 import io.sphere.lightspeed.queries.InvoiceReferenceQuery;
 import io.sphere.lightspeed.queries.QueryDsl;
@@ -16,6 +17,8 @@ import io.sphere.sdk.channels.ChannelRoles;
 import io.sphere.sdk.channels.commands.ChannelCreateCommand;
 import io.sphere.sdk.channels.queries.ChannelQuery;
 import io.sphere.sdk.client.SphereClient;
+import io.sphere.sdk.customers.Customer;
+import io.sphere.sdk.customers.queries.CustomerQuery;
 import io.sphere.sdk.orders.Order;
 import io.sphere.sdk.orders.OrderImportDraft;
 import io.sphere.sdk.orders.PaymentState;
@@ -37,6 +40,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Predicate;
 
+import static io.sphere.sdk.customers.queries.CustomerQuery.*;
 import static java.time.LocalDateTime.now;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
@@ -144,7 +148,7 @@ public final class OrderSyncActor extends SyncActor {
                     if (order.isPresent()) {
                         return CompletableFuture.completedFuture(order.get());
                     } else {
-                        return importOrderDraftToSphere(invoice.toOrderImportDraft(orderNumber));
+                        return importOrderToSphere(invoice, orderNumber);
                     }
                 })
                 .thenAccept(order -> {
@@ -186,16 +190,31 @@ public final class OrderSyncActor extends SyncActor {
         }
     }
 
+    private CompletableFuture<Order> importOrderToSphere(final Invoice invoice, final String orderNumber) {
+        return fetchCustomerFromSphere(invoice).thenCompose(customer ->
+                importOrderDraftToSphere(invoice.toOrderImportDraft(orderNumber, customer)));
+    }
+
     private CompletableFuture<Optional<Order>> fetchOrderFromSphere(final String orderNumber) {
         final StringQuerySortingModel<Order> orderNumberQuery = new StringQuerySortingModel<>(Optional.empty(), "orderNumber");
         return sphereClient.execute(OrderQuery.of().withPredicate(orderNumberQuery.is(orderNumber)))
                 .thenApply(PagedQueryResult::head);
     }
 
-    private CompletableFuture<Order> importOrderDraftToSphere(final OrderImportDraft orderImportDraft) {
-        return sphereClient.execute(OrderImportCommand.of(orderImportDraft))
+    private CompletableFuture<Optional<Customer>> fetchCustomerFromSphere(final Invoice invoice) {
+        if (invoice.getInvoiceCustomer().isWalkIn()) {
+            return CompletableFuture.completedFuture(Optional.<Customer>empty());
+        } else {
+            final String email = invoice.getInvoiceCustomer().getContactInfo();
+            return sphereClient.execute(CustomerQuery.of().withPredicate(model().email().is(email)))
+                    .thenApply(PagedQueryResult::head);
+        }
+    }
+
+    private CompletableFuture<Order> importOrderDraftToSphere(final OrderImportDraft draft) {
+        return sphereClient.execute(OrderImportCommand.of(draft))
                 .thenApply(order -> {
-                    log.info("Imported order " + orderImportDraft.getOrderNumber());
+                    log.info("Imported order " + draft.getOrderNumber());
                     return order;
                 });
     }

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import io.sphere.sdk.carts.TaxPortion;
 import io.sphere.sdk.carts.TaxedPrice;
+import io.sphere.sdk.customers.Customer;
 import io.sphere.sdk.models.Base;
 import io.sphere.sdk.orders.*;
 import org.javamoney.moneta.Money;
@@ -13,10 +14,10 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static java.math.BigDecimal.ROUND_HALF_EVEN;
 import static java.time.ZoneOffset.UTC;
-import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 
 public class Invoice extends Base implements Referenceable<Invoice> {
@@ -231,7 +232,7 @@ public class Invoice extends Base implements Referenceable<Invoice> {
         return String.format("%s-%s", storeId, id);
     }
 
-    public OrderImportDraft toOrderImportDraft(final String orderNumber) {
+    public OrderImportDraft toOrderImportDraft(final String orderNumber, final Optional<Customer> customer) {
         final Money totalPrice = Money.of(totals.getTotal(), currency.getCurrencyUnit());
         return OrderImportDraftBuilder
                 .ofLineItems(totalPrice, OrderState.COMPLETE, getLineItemImportDrafts())
@@ -239,7 +240,7 @@ public class Invoice extends Base implements Referenceable<Invoice> {
                 .completedAt(getDatetimeCreated().toInstant(UTC))
                 .paymentState(getPaymentState())
                 .taxedPrice(getTaxedPrice())
-                .build();
+                .customerId(customer.map(Customer::getId)).build();
     }
 
     public static TypeReference<Invoice> typeReference() {

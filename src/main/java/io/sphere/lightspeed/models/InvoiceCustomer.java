@@ -5,7 +5,7 @@ import io.sphere.sdk.models.Base;
 
 import java.math.BigDecimal;
 
-public class InvoiceCustomer extends Base {
+public class InvoiceCustomer extends Base implements Referenceable<LightSpeedCustomer> {
     private String uri;
     private String id;
 
@@ -77,5 +77,9 @@ public class InvoiceCustomer extends Base {
 
     public String getPo() {
         return po;
+    }
+
+    public boolean isWalkIn() {
+        return contactInfo == null || contactInfo.isEmpty();
     }
 }
