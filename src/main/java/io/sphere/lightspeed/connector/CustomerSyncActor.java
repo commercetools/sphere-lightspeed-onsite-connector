@@ -121,10 +121,10 @@ public final class CustomerSyncActor extends SyncActor {
     private void importCustomersToLightSpeed(final PagedQueryResult<Customer> customers) {
         log.info("Recent customers found: " + customers.size());
         customers.getResults().parallelStream()
-                .forEach(customer -> importProductToLightSpeed(LightSpeedCustomerDraft.of(customer)));
+                .forEach(customer -> importCustomerToLightSpeed(LightSpeedCustomerDraft.of(customer)));
     }
 
-    private void importProductToLightSpeed(final LightSpeedCustomerDraft draft) {
+    private void importCustomerToLightSpeed(final LightSpeedCustomerDraft draft) {
         final String email = draft.getEmail();
         fetchCustomerFromLightSpeed(email)
                 .thenCompose(customer -> {
