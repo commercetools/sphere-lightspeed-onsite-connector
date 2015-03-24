@@ -53,8 +53,8 @@ public final class ProductSyncActor extends SyncActor {
 
     @Override
     public void preStart() throws Exception {
-        final ProductSyncMessage msg = ProductSyncMessage.of(syncSince);
-        self().tell(msg, self());
+        final FiniteDuration delay = FiniteDuration.create(10, SECONDS);
+        schedule(PagedSyncMessage.of(delay, syncSince));
     }
 
     @Override
@@ -64,8 +64,8 @@ public final class ProductSyncActor extends SyncActor {
 
     @Override
     public void onReceive(final Object message) throws Exception {
-        if (message instanceof ProductSyncMessage) {
-            synchronizePage((ProductSyncMessage) message);
+        if (message instanceof PagedSyncMessage) {
+            synchronizePage((PagedSyncMessage) message);
         } else {
             unhandled(message);
         }
@@ -99,7 +99,7 @@ public final class ProductSyncActor extends SyncActor {
         });
     }
 
-    private void synchronizePage(final ProductSyncMessage msg) {
+    private void synchronizePage(final PagedSyncMessage msg) {
         log.info("Syncing products from SPHERE.IO to Lightspeed... Page " + msg.getPage());
         final LocalDateTime currentSyncStart = now();
         fetchRecentProductsPerPage(msg)
@@ -117,7 +117,7 @@ public final class ProductSyncActor extends SyncActor {
                 });
     }
 
-    private CompletableFuture<PagedSearchResult<ProductProjection>> fetchRecentProductsPerPage(final ProductSyncMessage msg) {
+    private CompletableFuture<PagedSearchResult<ProductProjection>> fetchRecentProductsPerPage(final PagedSyncMessage msg) {
         final SearchDsl<ProductProjection> baseSearch = of(CURRENT)
                 .withLimit(PAGE_SIZE)
                 .withOffset(msg.getPage() * PAGE_SIZE);
@@ -221,16 +221,16 @@ public final class ProductSyncActor extends SyncActor {
     }
 
 
-    private void synchronizeNextPage(final ProductSyncMessage lastMsg, final LocalDateTime syncStart) {
+    private void synchronizeNextPage(final PagedSyncMessage lastMsg, final LocalDateTime syncStart) {
         self().tell(lastMsg.withNextPage().ensureSyncStart(syncStart), self());
     }
 
-    private void tryAgain(final Throwable t, final ProductSyncMessage lastMsg) {
+    private void tryAgain(final Throwable t, final PagedSyncMessage lastMsg) {
         log.error(t, "An error occurred during order synchronization, increasing current interval...");
         schedule(lastMsg.withIncreasedDelay());
     }
 
     private void scheduleSyncWith(final LocalDateTime syncSince) {
-        schedule(ProductSyncMessage.of(Optional.of(syncSince)));
+        schedule(PagedSyncMessage.of(Optional.of(syncSince)));
     }
 }

@@ -26,6 +26,10 @@ public class SyncMessage {
         return syncSince.map(timestamp -> timestamp.minusSeconds(30)); // Safety margin
     }
 
+    public SyncMessage withDelay(final FiniteDuration appliedDelay) {
+        return of(appliedDelay, syncSince);
+    }
+
     public SyncMessage withIncreasedDelay() {
         final Optional<Long> seconds = appliedDelay.map(delay -> Math.max(delay.toSeconds() * 2, MIN_SEC_RETRY_INTERVAL));
         final FiniteDuration increasedDelay = Duration.create(seconds.orElse(MIN_SEC_RETRY_INTERVAL), SECONDS);

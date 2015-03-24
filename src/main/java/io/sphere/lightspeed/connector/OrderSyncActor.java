@@ -56,8 +56,8 @@ public final class OrderSyncActor extends SyncActor {
 
     @Override
     public void preStart() throws Exception {
-        final SyncMessage msg = SyncMessage.of(syncSince);
-        self().tell(msg, self());
+        final FiniteDuration delay = FiniteDuration.create(30, SECONDS);
+        schedule(SyncMessage.of(delay, syncSince));
     }
 
     @Override
