@@ -146,10 +146,7 @@ public final class ProductSyncActor extends SyncActor {
                 })
                 .thenAccept(product -> {
                     if (!product.hasPhotos()) {
-                        System.out.println("************ importing phot");
                         exportProductPhoto(product, images);
-                    } else {
-                        System.out.println("************ no need to");
                     }
                 })
                 .exceptionally(t -> {
@@ -195,6 +192,11 @@ public final class ProductSyncActor extends SyncActor {
                         executeUploadImage(product, request);
                     } else {
                         log.error(t, "Could not lock resource " + product.getUri());
+                        try {
+                            request.close();
+                        } catch (IOException e) {
+                            log.error(t, "Could not close request resources");
+                        }
                     }
                 });
     }
