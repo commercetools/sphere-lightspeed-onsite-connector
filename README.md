@@ -1,7 +1,7 @@
 SPHERE - Lightspeed OnSite Connector
 ==================================
 
-This connector allows to synchronize information between a SPHERE.IO project and a Lightspeed OnSite server.
+This connector allows you to synchronize information between a SPHERE.IO project and a Lightspeed OnSite server.
 In particular, the following synchronization is performed:
 
 - Export SPHERE.IO products to Lightspeed OnSite (`sku`, `name`, `price` and the first image from the master variant).
