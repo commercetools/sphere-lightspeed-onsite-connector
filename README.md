@@ -24,7 +24,7 @@ The [configuration file](https://github.com/sphereio/sphere-lightspeed-onsite-co
 - Lightspeed client configuration.
 - SPHERE.IO client configuration.
 - Synchronization intervals.
-- A timestamp limit to speed up synchronization, so that old documents are not processed.
+- A timestamp limit to speed up synchronization, so that older documents are not processed.
 - Store ID, to identify the point of sale where the orders took place.
 
 You can also use environment variables to configure the connector. Notice that when environment variables are used, the values from the configuration file are overriden.
