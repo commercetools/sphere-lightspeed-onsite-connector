@@ -6,7 +6,7 @@ In particular, the following synchronization is performed:
 
 - Export SPHERE.IO products to Lightspeed OnSite (`sku`, `name`, `price` and the first image from the master variant).
 - Export SPHERE.IO customers to Lightspeed OnSite (`firstName`, `lastName`, `email`).
-- Import Lightspeed OnSite invoices to SPHERE.IO (`orderNumber`, `completedAt`, along with all pricing information as well as associated customer, if any).
+- Import Lightspeed OnSite invoices to SPHERE.IO (`orderNumber`, `completedAt`, along with all line items and pricing information, as well as associated customer, if any).
 - Updates `paymentStatus` of orders.
 
 #### Requirements
